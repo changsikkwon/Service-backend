@@ -1,6 +1,6 @@
 def create_endpoints(app, service):
     
-    test_service  = service
+    test_service = service
 
     @app.route("/", methods=['GET'])
     def main():
