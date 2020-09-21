@@ -1,5 +1,5 @@
-from .test_service import TestService
+from .product_service import ProductService
 
 __all__ = [
-    'TestService',
+    'ProductService',
 ]
