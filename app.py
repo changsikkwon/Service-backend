@@ -1,12 +1,13 @@
-import config
-
 from flask                         import Flask
 from flask_cors                    import CORS
 
 from sqlalchemy                    import create_engine
-from model                         import TestDao
-from service                       import TestService
-from controller                    import create_endpoints
+from sqlalchemy.orm                import sessionmaker
+from sqlalchemy.pool               import QueuePool
+from model                         import ProductDao
+from service                       import ProductService
+
+from controller.product_controller import create_product_endpoints
 
 def create_app(test_config = None):
     app = Flask(__name__)
@@ -18,18 +19,19 @@ def create_app(test_config = None):
         app.config.update(test_config)
         
     # DB 연결
-    database = create_engine(app.config['DB_URL'], encoding = 'utf-8', max_overflow = 0)
+    database = create_engine(app.config['DB_URL'], encoding = 'utf-8', poolclass = QueuePool)
+    Session = sessionmaker(bind = database)
 
     # CORS 설정
-    CORS(app, resources={r'*' : {'origins': '*'}})
+    CORS(app, resources = {r'*' : {'origins' : '*'}})
     
     # Persistance layer
-    test_dao = TestDao(database)
+    product_dao = ProductDao()
     
     # Business layer
-    test_service = TestService(test_dao)
+    product_service = ProductService(product_dao)
     
     # Presentation layer
-    create_endpoints(app, test_service)
+    app.register_blueprint(create_product_endpoints(product_service, Session))
 
     return app
