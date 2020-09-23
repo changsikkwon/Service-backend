@@ -1,13 +1,12 @@
 from flask                         import Flask
 from flask_cors                    import CORS
-
 from sqlalchemy                    import create_engine
-from sqlalchemy.orm                import sessionmaker
 from sqlalchemy.pool               import QueuePool
+from sqlalchemy.orm                import sessionmaker
 
-from model                         import UserDao, ProductDao
-from service                       import UserService, ProductService
-from controller                    import create_user_endpoints, create_product_endpoints
+from model                         import ProductDao, UserDao
+from service                       import ProductService, UserService
+from controller                    import create_product_endpoints, create_user_endpoints
 
 def create_app(test_config = None):
     app = Flask(__name__)
@@ -18,8 +17,8 @@ def create_app(test_config = None):
         app.config.update(test_config)
         
     # DB 연결
-    database = create_engine(app.config['DB_URL'], encoding = 'utf-8', poolclass = QueuePool)
-    
+    database = create_engine(app.config['DB_URL'], encoding = 'utf-8', pool_size = 1000, max_overflow = 100, poolclass = QueuePool)
+
     # database와 연동된 session maker 생성, connection 필요시마다 session instace 생성
     Session = sessionmaker(bind = database)
 
