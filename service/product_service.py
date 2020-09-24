@@ -21,4 +21,3 @@ class ProductService:
     def get_products(self, filter_dict, session):
         products = self.product_dao.get_products(filter_dict, session)
         return products
-

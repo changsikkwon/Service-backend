@@ -103,6 +103,3 @@ class ProductDao:
         except Exception as e:
             return jsonify({'message' : f'{e}'}), 500
         return row
-
-
-
