@@ -3,7 +3,7 @@ from sqlalchemy import text
 class ProductDao:
     def get_menu(self, session):
         """ 카테고리 데이터 전달
-
+        
         args:
             session: 데이터베이스 session 객체
 
@@ -93,7 +93,7 @@ class ProductDao:
         History:
             2020-09-21 (고지원): 초기 생성
             2020-09-23 (고지원): 가장 최근 이력 데이터만 나오도록 수정
-        """
+            
         filter_query = """
             SELECT 
                 p.id, 
