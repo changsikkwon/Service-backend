@@ -33,47 +33,36 @@ class ProductDao:
         """))
         return row
 
-    def get_seller(self, seller_id, session):
-        """ 셀러 정보 전달
+    def get_sellers(self, q, session):
+        """ 셀러 정보 리스트 전달
 
         args:
             seller_id: 셀러를 판단하기 위한 아이디
             session: 데이터베이스 session 객체
 
         returns :
-            200: 셀러 정보
+            200: 셀러 리스트 정보
 
         Authors:
             고지원
 
         History:
             2020-09-21 (고지원): 초기 생성
+            2020-09-24 (고지원): 최근 데이터만 전달되도록 수정 및 이름 필터링을 위한 LIKE 절 추가
         """
-        row = session.execute(("""
-            SELECT 
-                seller_id, 
-                korean_name,
-                site_url
-            FROM seller_info s_info
-            INNER JOIN sellers s
-            WHERE s_info.seller_id = :seller_id
-        """), {'seller_id' : seller_id}).fetchone()
-        return row
-
-    def get_sellers(self, q, session):
+        name = f'%{q}%'
         row = session.execute(("""
             SELECT
-                COUNT(*) AS count,
                 s.id, 
                 s_info.korean_name, 
-                s_info.image_url
-                s.info.site_url
+                s_info.image_url,
+                s_info.site_url
             FROM seller_info AS s_info
-            INNER JOIN sellers AS s
+            INNER JOIN sellers AS s ON s.id = s_info.seller_id
             WHERE s_info.korean_name LIKE :name 
             AND s.is_deleted = 0
-            LIMIT 1
-        """), {'name' : q}).fetchall()
+            AND s_info.end_date = '9999-12-31 23:59:59'
+        """), {'name' : name}).fetchall()
         return row
 
     def get_products(self, filter_dict, session):
@@ -93,7 +82,8 @@ class ProductDao:
         History:
             2020-09-21 (고지원): 초기 생성
             2020-09-23 (고지원): 가장 최근 이력 데이터만 나오도록 수정
-            
+            2020-09-24 (고지원): 이름 검색 필터 추가, is_deleted 컬럼을 통해 최신 이력 가져오도록 수정
+        """
         filter_query = """
             SELECT 
                 p.id, 
@@ -109,7 +99,7 @@ class ProductDao:
             INNER JOIN product_info AS p_info ON p.id = p_info.product_id
             INNER JOIN sellers AS s ON p_info.seller_id = s.id
             INNER JOIN seller_info AS s_info ON s_info.seller_id = s.id
-            WHERE (p_info.product_id, p_info.created_at) IN (SELECT p_info.product_id, MAX(p_info.created_at) FROM product_info AS p_info GROUP BY p_info.product_id) 
+            WHERE p_info.is_deleted = 0 
             AND p.is_deleted = 0 
             AND p_info.is_displayed = 1
         """
@@ -125,6 +115,12 @@ class ProductDao:
         # 세일
         if filter_dict.get('is_promotion', None):
             filter_query += " AND p_info.is_promotion = :is_promotion"
+
+        # 상품 이름 검색
+        if filter_dict.get('q', None):
+            q = filter_dict['q']
+            filter_dict['q'] = f'%{q}%'
+            filter_query += " AND p_info.name LIKE :q"
 
         # 판매량, 최신순
         if filter_dict.get('select', None):
@@ -159,6 +155,7 @@ class ProductDao:
 
         History:
             2020-09-23 (고지원): 초기 생성
+            2020-09-24 (고지원): 셀러 테이블을 JOIN 하여 상품 데이터와 함께 셀러 데이터 가지고 오도록 수정
         """
         product_info = session.execute(("""
             SELECT 
@@ -169,10 +166,13 @@ class ProductDao:
                 p_info.sales_amount, 
                 p_info.discount_rate, 
                 p_info.discount_price,
-                p_info.seller_id
+                p_info.seller_id,
+                s_info.korean_name,
+                s_info.site_url
             FROM products AS p 
-            INNER JOIN product_info AS p_info
-            WHERE p_info.product_id = :product_id
+            INNER JOIN product_info AS p_info ON p_info.product_id = :product_id
+            INNER JOIN sellers AS s ON p_info.seller_id = s.id
+            INNER JOIN seller_info AS s_info ON s_info.seller_id = s.id
             ORDER BY p_info.created_at DESC 
             LIMIT 1
         """), {'product_id' : product_id}).fetchone()

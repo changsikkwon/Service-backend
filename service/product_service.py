@@ -6,18 +6,6 @@ class ProductService:
         categories = self.product_dao.get_menu(session)
         return categories
 
-    def get_first_menu(self, main_category_id, session):
-        firsts = self.product_dao.get_first_menu(main_category_id, session)
-        return firsts
-
-    def get_second_menu(self, first_category_id, session):
-        seconds = self.product_dao.get_second_menu(first_category_id, session)
-        return seconds
-
-    def get_seller(self, seller_id, session):
-        seller = self.product_dao.get_seller(seller_id, session)
-        return seller
-
     def get_sellers(self, q, session):
         sellers = self.product_dao.get_sellers(q, session)
         return sellers
