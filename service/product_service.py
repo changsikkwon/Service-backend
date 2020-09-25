@@ -2,9 +2,9 @@ class ProductService:
     def __init__(self, product_dao):
         self.product_dao = product_dao
 
-    def get_main_menu(self, session):
-        mains = self.product_dao.get_main_menu(session)
-        return mains
+    def get_menu(self, session):
+        categories = self.product_dao.get_menu(session)
+        return categories
 
     def get_first_menu(self, main_category_id, session):
         firsts = self.product_dao.get_first_menu(main_category_id, session)

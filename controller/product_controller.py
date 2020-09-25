@@ -20,19 +20,39 @@ def create_product_endpoints(product_service, Session):
 
         History:
             2020-09-21 (고지원): 초기 생성
+            2020-09-25 (고지원): dao 를 한 번 호출하여 데이터 전달하도록 수정
+
         """
         try:
             session = Session()
+            category = product_service.get_menu(session)
+
+            # 각 카테고리를 저장하기 위한 리스트
+            second_category = []
+            first_category = []
+            main_category = []
+
+            for i in category:
+                if (i.m_id, i.main_category_name) not in main_category:
+                    # 메인 카테고리 리스트
+                    main_category.append((i.m_id, i.main_category_name))
+                if (i.f_id, i.first_category_name, i.main_category_id) not in first_category:
+                    # 첫 번째 데이터 리스트
+                    first_category.append((i.f_id, i.first_category_name, i.main_category_id))
+                # 세 번째 카테고리 리스트
+                second_category.append((i.s_id, i.second_category_name, i.first_category_id))
+
             body = [{
-                'id'                    : main.id,
-                main.main_category_name : [{
-                    'id'                     : first.id,
-                    first.first_category_name: [{
-                        'id'   : second.id,
-                        'name' : second.second_category_name
-                    }for second in product_service.get_second_menu(first.id, session)]
-                }for first in product_service.get_first_menu(main.id, session)]
-            }for main in product_service.get_main_menu(session)]
+                'id'      : m_menu[0],
+                m_menu[1] : [{
+                    'id'      : f_menu[0],
+                    f_menu[1] : [{
+                        'id'   : s_menu[0],
+                        'name' : s_menu[1]
+                    } for s_menu in second_category if s_menu[2] == f_menu[0]]
+                } for f_menu in first_category if f_menu[2] == m_menu[0]]
+            } for m_menu in main_category]
+
             return jsonify(body), 200
 
         except Exception as e:

@@ -1,77 +1,36 @@
 from sqlalchemy import text
 
 class ProductDao:
-    def get_main_menu(self, session):
-        """ 메인 카테고리 전달
-
+    def get_menu(self, session):
+        """ 카테고리 데이터 전달
+        
         args:
             session: 데이터베이스 session 객체
 
         returns :
-            200: 메인 메뉴 리스트
+            200: 메뉴 리스트
 
         Authors:
             고지원
 
         History:
             2020-09-21 (고지원): 초기 생성
+            2020-09-24 (고지원): 하나씩 존재했던 3개의 카테고리 정보를 가져오는 메소드를 JOIN 을 통해 한 번에 전달하도록 수정
         """
         row = session.execute(("""
-            SELECT 
-                id, 
-                main_category_name
-            FROM main_categories
+            SELECT
+                m_cat.id AS m_id, 
+                m_cat.main_category_name,
+                f_cat.id AS f_id,
+                f_cat.first_category_name,
+                f_cat.main_category_id,
+                s_cat.id AS s_id,
+                s_cat.second_category_name,
+                s_cat.first_category_id
+            FROM main_categories AS m_cat 
+            LEFT OUTER JOIN first_categories AS f_cat ON m_cat.id = f_cat.main_category_id
+            LEFT OUTER JOIN second_categories AS s_cat ON f_cat.id = s_cat.first_category_id
         """))
-        return row
-
-    def get_first_menu(self, main_category_id, session):
-        """ 첫 번째 카테고리 전달
-
-        args:
-            main_category_id: 메인 카테고리의 하위 메뉴를 판단하기 위한 메인 카테고리의 아이디
-            session: 데이터베이스 session 객체
-
-        returns :
-            200: 첫 번째 카테고리 리스트
-
-        Authors:
-            고지원
-
-        History:
-            2020-09-21 (고지원): 초기 생성
-        """
-        row = session.execute(("""
-            SELECT 
-                id, 
-                first_category_name
-            FROM first_categories
-            WHERE main_category_id = :main_id
-        """), {'main_id' : main_category_id})
-        return row
-
-    def get_second_menu(self, first_category_id, session):
-        """ 두 번째 카테고리 전달
-
-        args:
-            first_category_id: 첫 번째 카테고리의 하위 메뉴를 판단하기 위한 첫 번째 카테고리의 아이디
-            session: 데이터베이스 session 객체
-
-        returns :
-            200: 두 번째 카테고리 리스트
-
-        Authors:
-            고지원
-
-        History:
-            2020-09-21 (고지원): 초기 생성
-        """
-        row = session.execute(("""
-            SELECT 
-                id, 
-                second_category_name
-            FROM second_categories
-            WHERE first_category_id = :first_id
-        """), {'first_id' : first_category_id})
         return row
 
     def get_seller(self, seller_id, session):
@@ -133,8 +92,8 @@ class ProductDao:
 
         History:
             2020-09-21 (고지원): 초기 생성
-            2020-09-23 (고지원):
-        """
+            2020-09-23 (고지원): 가장 최근 이력 데이터만 나오도록 수정
+            
         filter_query = """
             SELECT 
                 p.id, 
