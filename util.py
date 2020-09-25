@@ -18,11 +18,11 @@ def login_required(func):
             if payload is None:
                 return Response(status = 401)  
 
-            login_id   = payload['login_id']  
-            g.login_id = login_id
+            email   = payload['email']  
+            g.email = email
             
         else:
             return Response(status = 401)  
 
-        return f(*args, **kwargs)
+        return func(*args, **kwargs)
     return decorated_function

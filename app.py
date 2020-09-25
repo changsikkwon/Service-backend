@@ -18,7 +18,7 @@ def create_app(test_config = None):
         
     # DB 연결
     database = create_engine(app.config['DB_URL'], encoding = 'utf-8', pool_size = 1000, max_overflow = 100, poolclass = QueuePool)
-
+    
     # database와 연동된 session maker 생성, connection 필요시마다 session instace 생성
     Session = sessionmaker(bind = database)
 
