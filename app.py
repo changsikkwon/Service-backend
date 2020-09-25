@@ -4,9 +4,9 @@ from sqlalchemy                    import create_engine
 from sqlalchemy.pool               import QueuePool
 from sqlalchemy.orm                import sessionmaker
 
-from model                         import ProductDao, UserDao
-from service                       import ProductService, UserService
-from controller                    import create_product_endpoints, create_user_endpoints
+from model                         import ProductDao, UserDao, QnaDao
+from service                       import ProductService, UserService, QnaService
+from controller                    import create_product_endpoints, create_user_endpoints, create_qna_endpoints
 
 def create_app(test_config = None):
     app = Flask(__name__)
@@ -28,13 +28,16 @@ def create_app(test_config = None):
     # Persistance layer
     user_dao    = UserDao()
     product_dao = ProductDao()
+    qna_dao  = QnaDao()
     
     # Business layer
     user_service    = UserService(user_dao)
     product_service = ProductService(product_dao)
+    qna_service  = QnaService(qna_dao)
     
     # Presentation layer
     app.register_blueprint(create_user_endpoints(user_service, Session))
     app.register_blueprint(create_product_endpoints(product_service, Session))
+    app.register_blueprint(create_qna_endpoints(qna_service, Session))
     
     return app
