@@ -1,9 +1,10 @@
-from flask import request, jsonify, Blueprint
+from flask import jsonify, Blueprint
 from flask_request_validator import (
     GET,
     PATH,
     Param,
     JSON,
+    Enum,
     validate_params
 )
 
@@ -68,13 +69,14 @@ def create_product_endpoints(product_service, Session):
 
     @product_app.route('', methods = ['GET'])
     @validate_params(
-        Param('limit', GET, int, required=False),
-        Param('offset', GET, int, required=False),
-        Param('first_category_id', GET, int, required=False),
-        Param('second_category_id', GET, int, required=False),
-        Param('is_promotion', GET, int, required=False),
-        Param('select', GET, int, required=False),
-        Param('q', GET, str, required=False)
+        Param('limit', GET, int, default = 100, required = False),
+        Param('offset', GET, int, required = False),
+        Param('main_category_id', GET, int, required = False),
+        Param('first_category_id', GET, int, required = False),
+        Param('second_category_id', GET, int, required = False),
+        Param('is_promotion', GET, int, rules = [Enum(0, 1)], required = False),
+        Param('select', GET, int, rules = [Enum(0, 1)], required = False),
+        Param('q', GET, str, required = False)
     )
     def products(*args):
         """ 상품 정보 전달 API
@@ -96,21 +98,22 @@ def create_product_endpoints(product_service, Session):
             session = Session()
             # pagination
             filter_dict = {}
-            filter_dict['limit'] = request.args.get('limit', 100, int)
-            filter_dict['offset'] = request.args.get('offset', 0, int)
+            filter_dict['limit'] = args[0]
+            filter_dict['offset'] = args[1]
 
             # 카테고리
-            filter_dict['first_category_id'] = request.args.get('first_category_id', None)
-            filter_dict['second_category_id'] = request.args.get('second_category_id', None)
+            filter_dict['main_category_id'] = args[2]
+            filter_dict['first_category_id'] = args[3]
+            filter_dict['second_category_id'] = args[4]
 
             # 세일
-            filter_dict['is_promotion'] = request.args.get('is_promotion', False)
+            filter_dict['is_promotion'] = args[5]
 
             # 판매량순, 최신순
-            filter_dict['select'] = request.args.get('select', False)
+            filter_dict['select'] = args[6]
 
             # 검색 필터
-            q = request.args.get('q', None)
+            q = args[7]
             filter_dict['q'] = q
 
             body = {
@@ -193,8 +196,6 @@ def create_product_endpoints(product_service, Session):
                 'sales_amount'   : product['sales_amount'],
                 'seller_name'    : product['korean_name'],
                 'seller_url'     : product['site_url'],
-                'review_rating'  : 'rating',
-                'review_count'   : 'count'
             }
             return jsonify(body), 200
 

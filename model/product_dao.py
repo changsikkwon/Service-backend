@@ -81,7 +81,7 @@ class ProductDao:
 
         History:
             2020-09-21 (고지원): 초기 생성
-            2020-09-23 (고지원): 가장 최근 이력 데이터만 나오도록 수정
+            2020-09-23 (고지원): created_at 컬럼을 통해 최신 이력 데이터만 나오도록 수정
             2020-09-24 (고지원): 이름 검색 필터 추가, is_deleted 컬럼을 통해 최신 이력 가져오도록 수정
         """
         filter_query = """
@@ -98,11 +98,16 @@ class ProductDao:
             FROM products AS p
             INNER JOIN product_info AS p_info ON p.id = p_info.product_id
             INNER JOIN sellers AS s ON p_info.seller_id = s.id
+            INNER JOIN first_categories AS f_cat ON f_cat.id = first_category_id
+            INNER JOIN main_categories AS m_cat ON m_cat.id = main_category_id
             INNER JOIN seller_info AS s_info ON s_info.seller_id = s.id
             WHERE p_info.is_deleted = 0 
             AND p.is_deleted = 0 
             AND p_info.is_displayed = 1
         """
+        # main 카테고리
+        if filter_dict.get('main_category_id', None):
+            filter_query += " AND main_category_id = :main_category_id"
 
         # first 카테고리
         if filter_dict.get('first_category_id', None):
