@@ -183,6 +183,7 @@ class ProductDao:
             INNER JOIN product_info AS p_info ON p_info.product_id = :product_id
             INNER JOIN sellers AS s ON p_info.seller_id = s.id
             INNER JOIN seller_info AS s_info ON s_info.seller_id = s.id
+            WHERE p.id = :product_id
             ORDER BY p_info.created_at DESC 
             LIMIT 1
         """), {'product_id' : product_id}).fetchone()

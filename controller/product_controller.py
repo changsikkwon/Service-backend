@@ -20,7 +20,7 @@ def create_product_endpoints(product_service, Session):
 
         returns :
             200: 카테고리 리스트
-            500:
+            500: Exception
 
         Authors:
             고지원
@@ -71,12 +71,13 @@ def create_product_endpoints(product_service, Session):
     @validate_params(
         Param('limit', GET, int, default = 100, required = False),
         Param('offset', GET, int, required = False),
-        Param('main_category_id', GET, int, required = False),
+        Param('main_category_id', GET, int, rules = [Enum(4, 5, 6)], required = False),
         Param('first_category_id', GET, int, required = False),
         Param('second_category_id', GET, int, required = False),
         Param('is_promotion', GET, int, rules = [Enum(0, 1)], required = False),
         Param('select', GET, int, rules = [Enum(0, 1)], required = False),
-        Param('q', GET, str, required = False)
+        Param('q', GET, str, required = False),
+        Param('all_items', GET, int, rules = [Enum(1)], required=False)
     )
     def products(*args):
         """ 상품 정보 전달 API
@@ -84,7 +85,7 @@ def create_product_endpoints(product_service, Session):
 
         returns :
             200: 상품 리스트
-            500:
+            500: Exception
 
         Authors:
             고지원
@@ -97,35 +98,16 @@ def create_product_endpoints(product_service, Session):
         """
         try:
             session = Session()
-            # pagination
-            filter_dict = {}
-            filter_dict['limit'] = args[0]
-            filter_dict['offset'] = args[1]
 
-            # 카테고리
-            filter_dict['main_category_id'] = args[2]
-            filter_dict['first_category_id'] = args[3]
-            filter_dict['second_category_id'] = args[4]
-
-            # 세일
-            filter_dict['is_promotion'] = args[5]
-
-            # 판매량순, 최신순
-            filter_dict['select'] = args[6]
-
-            # 검색 필터
-            q = args[7]
-            filter_dict['q'] = q
-
-            # 메인 카테고리 아이디 (5_브랜드, 6_뷰티) 파라미터만 들어올 경우 판매순 별 랭킹, 첫 번째 카테고리 상품 리스트, 추천 상품 데이터 전달
-            if (args[2] == 5) or (args[2] == 6) and (not args[3]) and (not args[4]):
+            # 메인 카테고리 아이디 (5_브랜드, 6_뷰티) 파라미터만 들어올 경우 판매순 별 랭킹, 할인율 별 상품 데이터 등 전달
+            if args[2] == 5 or args[2] == 6 and not args[8] and not args[3] and not args[4]:
                 body = {
                     'best_items'          : [],
                     'brand_items'         : [],
                     'recommended_items'   : []
                 }
 
-                # Best 상품 필터 - 판매량 순 10개만 가져오기 위해 선언
+                # Best 상품 필터 - 해당하는 메인 카테고리의 상품 중 판매량 순 10개만 가져오기 위해 선언
                 filter_dict = {
                     'main_category_id' : args[2],
                     'limit'            : 10,
@@ -144,10 +126,14 @@ def create_product_endpoints(product_service, Session):
                 } for product in product_service.get_products(filter_dict, session)]
 
                 # 브랜드 상품 리스트 필터 - 특정 브랜드(셀러) 상품 5개만 가져오기 위해 선언
+                if args[2] == 5:
+                    seller_id = 30 # 브랜드 셀러
+                else:
+                    seller_id = 359 # 뷰티 셀러
+
                 filter_dict = {
                     'main_category_id' : args[2],
-                    'limit'            : 5,
-                    'seller_id'        : 30
+                    'seller_id'        : seller_id
                 }
 
                 # 브랜드 상품
@@ -169,7 +155,7 @@ def create_product_endpoints(product_service, Session):
                     'discount_rate'    : 1
                 }
 
-                # 브랜드 상품
+                # 추천 상품
                 recommended_products = [{
                     'id'             : product.id,
                     'name'           : product.name,
@@ -186,6 +172,30 @@ def create_product_endpoints(product_service, Session):
                 body['recommended_items'] = recommended_products
 
                 return body
+
+            # 필터링을 위한 딕셔너리
+            filter_dict = {}
+
+            # pagination
+            filter_dict['limit'] = args[0]
+            filter_dict['offset'] = args[1]
+
+            # 카테고리
+            filter_dict['main_category_id'] = args[2]
+            filter_dict['first_category_id'] = args[3]
+            filter_dict['second_category_id'] = args[4]
+
+            # 세일
+            filter_dict['is_promotion'] = args[5]
+
+            # 판매량순, 최신순
+            filter_dict['select'] = args[6]
+
+            # 검색 필터
+            filter_dict['q'] = args[7]
+
+            # 메인 카테고리의 모든 상품 필터
+            filter_dict['all_items'] = args[8]
 
             body = {
                 'products': [],
@@ -207,7 +217,7 @@ def create_product_endpoints(product_service, Session):
             body['products'] = products
 
             # 검색 쿼리 파라미터가 들어올 경우 전달하는 셀러 정보
-            if q:
+            if filter_dict['q']:
                 sellers = {
                     'count'      : [],
                     'seller_list': []
@@ -218,7 +228,7 @@ def create_product_endpoints(product_service, Session):
                     'name'   : seller.korean_name,
                     'image'  : seller.image_url,
                     'url'    : seller.site_url,
-                } for seller in product_service.get_sellers(q, session)]
+                } for seller in product_service.get_sellers(filter_dict['q'], session)]
 
                 # 셀러 검색 결과 개수
                 sellers['count'] = len(seller_list)
@@ -242,7 +252,7 @@ def create_product_endpoints(product_service, Session):
 
         returns :
             200: 상위 카테고리에 따른 하위 카테고리 리스트
-            500:
+            500: Exception
 
         Authors:
             고지원
