@@ -80,6 +80,7 @@ class QnaDao:
                 q.created_at AS q_created_at,
                 q.is_answered,
                 q_t.type_name,
+                q.created_at AS q_created_at,
                 u.login_id,
                 a.id AS a_id,
                 a.content AS a_content,
@@ -87,13 +88,19 @@ class QnaDao:
                 a.created_at AS a_created_at,
                 s_info.korean_name
             FROM questions AS q
+            
+            # 문의 정보 조인
             INNER JOIN users AS u ON u.id = q.user_id
             INNER JOIN question_types AS q_t ON q_t.id = q.type_id 
+            
+            # 답변 정보 조인
             LEFT OUTER JOIN answers AS a ON a.id = q.id
             LEFT OUTER JOIN sellers AS s ON s.id = a.replier_id
             LEFT OUTER JOIN seller_info AS s_info ON s_info.seller_id = s.id
+            
             WHERE q.is_deleted = 0
         """
+
         # 유저 아이디
         if qna_info.get('user_id', None):
             qna_query += " AND u.id = :user_id"
