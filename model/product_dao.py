@@ -1,5 +1,3 @@
-from sqlalchemy import text
-
 class ProductDao:
     def get_menu(self, session):
         """ 카테고리 데이터 전달
@@ -83,6 +81,7 @@ class ProductDao:
             2020-09-21 (고지원): 초기 생성
             2020-09-23 (고지원): created_at 컬럼을 통해 최신 이력 데이터만 나오도록 수정
             2020-09-24 (고지원): 이름 검색 필터 추가, is_deleted 컬럼을 통해 최신 이력 가져오도록 수정
+            2020-09-28 (고지원): 브랜드, 할인율 필터 추가
         """
         filter_query = """
             SELECT 
@@ -94,7 +93,9 @@ class ProductDao:
                 p_info.discount_rate, 
                 p_info.discount_price, 
                 p_info.seller_id,
-                s_info.korean_name
+                s_info.korean_name,
+                s_info.site_url,
+                f_cat.first_category_name
             FROM products AS p
             INNER JOIN product_info AS p_info ON p.id = p_info.product_id
             INNER JOIN sellers AS s ON p_info.seller_id = s.id
@@ -121,6 +122,10 @@ class ProductDao:
         if filter_dict.get('is_promotion', None):
             filter_query += " AND p_info.is_promotion = :is_promotion"
 
+        # 브랜드
+        if filter_dict.get('seller_id', None):
+            filter_query += " AND s.id = :seller_id"
+
         # 상품 이름 검색
         if filter_dict.get('q', None):
             q = filter_dict['q']
@@ -133,15 +138,15 @@ class ProductDao:
         else:
             filter_query += " ORDER BY p_info.sales_amount DESC"
 
-        # 페이징 시작
-        if filter_dict.get('offset', None):
-            filter_query += " OFFSET :offset"
-
         # 페이징 마지막
         if filter_dict.get('limit', None):
             filter_query += " LIMIT :limit"
 
-        row = session.execute(text(filter_query), filter_dict)
+        # 페이징 시작
+        if filter_dict.get('offset', None):
+            filter_query += " OFFSET :offset"
+
+        row = session.execute(filter_query, filter_dict)
 
         return row
 

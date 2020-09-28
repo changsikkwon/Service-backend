@@ -93,6 +93,7 @@ def create_product_endpoints(product_service, Session):
             2020-09-21 (고지원): 초기 생성
             2020-09-23 (고지원): 파라미터 유효성 검사
             2020-09-24 (고지원): 검색을 위한 파라미터 추가, 검색 시 셀러 리스트 추가
+            2020-09-28 (고지원): 브랜드, 뷰티 메인에서 필요한 데이터를 위한 필터링 추가
         """
         try:
             session = Session()
@@ -116,9 +117,79 @@ def create_product_endpoints(product_service, Session):
             q = args[7]
             filter_dict['q'] = q
 
+            # 메인 카테고리 아이디 (5_브랜드, 6_뷰티) 파라미터만 들어올 경우 판매순 별 랭킹, 첫 번째 카테고리 상품 리스트, 추천 상품 데이터 전달
+            if (args[2] == 5) or (args[2] == 6) and (not args[3]) and (not args[4]):
+                body = {
+                    'best_items'          : [],
+                    'brand_items'         : [],
+                    'recommended_items'   : []
+                }
+
+                # Best 상품 필터 - 판매량 순 10개만 가져오기 위해 선언
+                filter_dict = {
+                    'main_category_id' : args[2],
+                    'limit'            : 10,
+                }
+
+                # Best 상품 리스트
+                best_products = [{
+                    'id'             : product.id,
+                    'name'           : product.name,
+                    'image'          : product.main_img,
+                    'price'          : product.price,
+                    'sales_amount'   : product.sales_amount,
+                    'discount_rate'  : product.discount_rate,
+                    'discount_price' : product.discount_price,
+                    'seller_name'    : product.korean_name
+                } for product in product_service.get_products(filter_dict, session)]
+
+                # 브랜드 상품 리스트 필터 - 특정 브랜드(셀러) 상품 5개만 가져오기 위해 선언
+                filter_dict = {
+                    'main_category_id' : args[2],
+                    'limit'            : 5,
+                    'seller_id'        : 30
+                }
+
+                # 브랜드 상품
+                brand_products = [{
+                    'id'             : product.id,
+                    'name'           : product.name,
+                    'image'          : product.main_img,
+                    'price'          : product.price,
+                    'sales_amount'   : product.sales_amount,
+                    'discount_rate'  : product.discount_rate,
+                    'discount_price' : product.discount_price,
+                    'seller_name'    : product.korean_name
+                } for product in product_service.get_products(filter_dict, session)]
+
+                # 추천 상품 필터 - 할인율 기준
+                filter_dict = {
+                    'main_category_id' : args[2],
+                    'limit'            : 30,
+                    'discount_rate'    : 1
+                }
+
+                # 브랜드 상품
+                recommended_products = [{
+                    'id'             : product.id,
+                    'name'           : product.name,
+                    'image'          : product.main_img,
+                    'price'          : product.price,
+                    'sales_amount'   : product.sales_amount,
+                    'discount_rate'  : product.discount_rate,
+                    'discount_price' : product.discount_price,
+                    'seller_name'    : product.korean_name
+                } for product in product_service.get_products(filter_dict, session)]
+
+                body['best_items'] = best_products
+                body['brand_items'] = brand_products
+                body['recommended_items'] = recommended_products
+
+                return body
+
             body = {
-                'products' : [],
-                'sellers'  : []
+                'products': [],
+                'sellers': []
             }
 
             # 상품 데이터
