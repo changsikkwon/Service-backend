@@ -1,6 +1,6 @@
 import jwt
 
-from flask      import request, Response, g
+from flask      import request, g, jsonify
 
 from config     import SECRET_KEY, ALGORITHM
 from functools  import wraps
@@ -13,16 +13,16 @@ def login_required(func):
             try:
                 payload = jwt.decode(access_token, SECRET_KEY, ALGORITHM) 
             except jwt.InvalidTokenError:
-                 payload = None     
+                 payload = None
 
             if payload is None:
-                return Response(status = 401)  
+                return jsonify({'message' : 'INVALID_TOKEN'}), 401
 
-            email   = payload['email']  
-            g.email = email
+            user_id   = payload
+            g.user_id = user_id
             
         else:
-            return Response(status = 401)  
+            return jsonify({'message' : 'INVALID_TOKEN'}), 401
 
         return func(*args, **kwargs)
     return decorated_function
