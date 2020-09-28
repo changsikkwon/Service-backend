@@ -1,5 +1,3 @@
-import requests
-
 from flask          import request, Blueprint, jsonify, g
 
 from util           import login_required
@@ -30,6 +28,7 @@ def create_order_endpoints(user_service, Session):
         try:
             order_info     = request.json
             user_id        = g.user_id
+            print(user_id)
             new_order_info = user_service.insert_order(order_info, user_id, session)
             
             return jsonify({'message' : new_order_info}), 200

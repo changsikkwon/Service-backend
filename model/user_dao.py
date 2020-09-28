@@ -76,7 +76,7 @@ class UserDao:
             WHERE user_id = :user_id
         """
         ,{'user_id' : user_id['user_id']}).fetchall()
-
+     
         if len(count_shipping_address) < 5:
             row = session.execute(
             """INSERT INTO shipping_address (
@@ -84,7 +84,6 @@ class UserDao:
                     address,
                     phone_number,
                     reciever,
-                    ordering,
                     is_default
                 )
                 VALUES(
@@ -92,14 +91,13 @@ class UserDao:
                     :address,
                     :phone_number,
                     :reciever,
-                    5,
                     0
             )"""
             ,({
-            'user_id'      : user_id['user_id'],
-            'address'      : shipping_address_info['address'],
-            'phone_number' : shipping_address_info['phone_number'],
-            'reciever'     : shipping_address_info['reciever'],
+                'user_id'      : user_id['user_id'],
+                'address'      : shipping_address_info['address'],
+                'phone_number' : shipping_address_info['phone_number'],
+                'reciever'     : shipping_address_info['reciever'],
             })).lastrowid
             return row
         return None

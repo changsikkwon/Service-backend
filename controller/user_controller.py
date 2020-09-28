@@ -108,7 +108,7 @@ def create_user_endpoints(user_service, Session):
         finally:
             session.close()
             
-    @user_app.route("/shippingAddress/insert", methods = ['POST'], endpoint = 'insert_shipping_address')
+    @user_app.route("/shippingAddress", methods = ['POST'], endpoint = 'insert_shipping_address')
     @login_required
     def insert_shipping_address():
         session = Session()
@@ -127,7 +127,7 @@ def create_user_endpoints(user_service, Session):
             session.rollback()
             return jsonify({'message' : f'{e}'}), 500
 
-    @user_app.route("/shippingAddress/select", methods = ['GET'], endpoint = 'select_shipping_address')
+    @user_app.route("/shippingAddress", methods = ['GET'], endpoint = 'select_shipping_address')
     @login_required
     def select_shipping_address():
         session = Session()
@@ -144,7 +144,7 @@ def create_user_endpoints(user_service, Session):
             session.rollback()
             return jsonify({'message' : f'{e}'}), 500
         
-    @user_app.route("/shippingAddress/update", methods = ['POST'], endpoint = 'update_shipping_address')
+    @user_app.route("/shippingAddress", methods = ['PUT'], endpoint = 'update_shipping_address')
     @login_required
     def update_shipping_address():
         session = Session()
@@ -163,7 +163,7 @@ def create_user_endpoints(user_service, Session):
             session.rollback()
             return jsonify({'message' : f'{e}'}), 500
         
-    @user_app.route("/shippingAddress/delete", methods = ['DELETE'], endpoint = 'delete_shipping_address')
+    @user_app.route("/shippingAddress", methods = ['DELETE'], endpoint = 'delete_shipping_address')
     @login_required
     def delete_shipping_address():
         session = Session()
