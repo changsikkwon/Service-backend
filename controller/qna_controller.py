@@ -72,9 +72,9 @@ def create_qna_endpoints(qna_service, Session):
 
     @qna_app.route('', methods=['GET'])
     @validate_params(
-        Param('product_id', GET, int, required=False),
+        Param('product_id', GET, int, required=True),
     )
-    def qnas():
+    def qnas(*args):
         """ QnA 리스트 전달 API
 
         product_id 에 따른 QnA 리스트를 표출합니다.
@@ -91,13 +91,14 @@ def create_qna_endpoints(qna_service, Session):
 
         History:
             2020-09-27 (고지원): 초기 생성
+            2020-09-30 (고지원): 파라미터 유효성 검사 추가
         """
         session = Session()
         try:
             qna_info = {}
 
             # 상품 상세페이지 상품 아이디
-            qna_info['product_id'] = request.args.get('product_id')
+            qna_info['product_id'] = args[0]
 
             body = [{
                 'q_id'          : qna.q_id,
@@ -124,7 +125,7 @@ def create_qna_endpoints(qna_service, Session):
     @qna_app.route('/user', methods=['GET'])
     @login_required
     @validate_params(
-        Param('product_id', GET, int, srequired=False),
+        Param('product_id', GET, int, required=False),
         Param('is_answered', GET, int, rules=[Enum(0, 1)], required=False),
     )
     def user_qna(*args):
@@ -148,13 +149,14 @@ def create_qna_endpoints(qna_service, Session):
 
         History:
             2020-09-29 (고지원): 초기 생성
+            2020-09-30 (고지원): 파라미터 유효성 검사 추가
         """
 
         session = Session()
         try:
             qna_info = {}
 
-            # 상품 상세페이지 상품 아이디
+            # 상품 아이디 (특정 상품의 상세페이지에서 내가 쓴 문의 필터링을 위해)
             qna_info['product_id'] = args[0]
 
             # 답변 여부
