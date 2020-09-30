@@ -29,9 +29,10 @@ class ProductDao:
             LEFT OUTER JOIN first_categories AS f_cat ON m_cat.id = f_cat.main_category_id
             LEFT OUTER JOIN second_categories AS s_cat ON f_cat.id = s_cat.first_category_id
         """))
+
         return row
 
-    def get_sellers(self, q, session):
+    def get_sellers(self, seller_dict, session):
         """ 셀러 정보 리스트 전달
 
         args:
@@ -47,25 +48,68 @@ class ProductDao:
         History:
             2020-09-21 (고지원): 초기 생성
             2020-09-24 (고지원): 최근 데이터만 전달되도록 수정 및 이름 필터링을 위한 LIKE 절 추가
+            2020-09-30 (고지원): 셀러 속성과 판매량, 최신순 필터 추가
         """
-        name = f'%{q}%'
-        row = session.execute(("""
+        filter_query = """
             SELECT
                 s.id, 
                 s_info.korean_name, 
                 s_info.image_url,
-                s_info.site_url
+                s_info.site_url,
+                SUM(p_info.sales_amount) AS sales_amount
             FROM seller_info AS s_info
+            
+            # 셀러 테이블 조인 
             INNER JOIN sellers AS s ON s.id = s_info.seller_id
-            WHERE s_info.korean_name LIKE :name 
-            AND s.is_deleted = 0
+            
+            # 셀러의 속성 정보 테이블 조인 
+            INNER JOIN seller_attributes AS s_attr ON s_attr.id = s_info.seller_attribute_id
+            
+            # 상품 정보 테이블 조인
+            LEFT OUTER JOIN product_info AS p_info ON p_info.seller_id = s.id
+            
+            WHERE s.is_deleted = 0
             AND s_info.end_date = '9999-12-31 23:59:59'
-        """), {'name' : name}).fetchall()
+            AND p_info.is_deleted = 0
+        """
+
+        # 이름 검색어
+        if seller_dict.get('name', None):
+
+            # 이름 검색어를 formatting 하여 LIKE 절에 사용
+            name = seller_dict['name']
+            seller_dict['name'] = f'%{name}%'
+
+            filter_query += " AND s_info.korean_name LIKE :name"
+
+        # 쇼핑몰 / 브랜드 / 뷰티 셀러 필터링
+        if seller_dict.get('main_category_id', None):
+            filter_query += " AND s_attr.attribute_group_id = :main_category_id"
+
+        # 셀러의 판매량을 COUNT 하기 위해
+        filter_query += " GROUP BY s_info.seller_id"
+
+        # 판매량순 / 최신순 필터링
+        if seller_dict.get('select', None) == 0:
+            filter_query += " ORDER BY s.created_at DESC"
+        filter_query += " ORDER BY sales_amount DESC"
+
+        # limit
+        if seller_dict.get('limit', None):
+            filter_query += " LIMIT :limit"
+
+        # offset
+        if seller_dict.get('offset', None):
+            filter_query += " OFFSET :offset"
+
+        row = session.execute(filter_query, seller_dict).fetchall()
+
         return row
 
     def get_products(self, filter_dict, session):
         """ 상품 리스트 표출
-        쿼리 파라미터에 따른 필터링된 상품 리스트를 전달한다.
+
+        쿼리 파라미터에 따른 필터링된 상품 리스트를 전달합니다.
 
         args:
             filter_dict: 필터링을 위한 딕셔너리
@@ -97,11 +141,18 @@ class ProductDao:
                 s_info.site_url,
                 f_cat.first_category_name
             FROM products AS p
+            
+            # 상품 정보 조인
             INNER JOIN product_info AS p_info ON p.id = p_info.product_id
+            
+            # 셀러 정보 조인 
             INNER JOIN sellers AS s ON p_info.seller_id = s.id
+            INNER JOIN seller_info AS s_info ON s_info.seller_id = s.id
+            
+            # 카테고리 정보 조인 
             INNER JOIN first_categories AS f_cat ON f_cat.id = first_category_id
             INNER JOIN main_categories AS m_cat ON m_cat.id = main_category_id
-            INNER JOIN seller_info AS s_info ON s_info.seller_id = s.id
+            
             WHERE p_info.is_deleted = 0 
             AND p.is_deleted = 0 
             AND p_info.is_displayed = 1
@@ -138,11 +189,11 @@ class ProductDao:
         else:
             filter_query += " ORDER BY p_info.sales_amount DESC"
 
-        # 페이징 마지막
+        # pagination
         if filter_dict.get('limit', None):
             filter_query += " LIMIT :limit"
 
-        # 페이징 시작
+        # pagination
         if filter_dict.get('offset', None):
             filter_query += " OFFSET :offset"
 

@@ -34,8 +34,19 @@ class ProductService:
 
         History:
             2020-09-21 (고지원): 초기 생성
+            2020-10-01 (고지원): JSON 응답 형식 정의
         """
-        products = self.product_dao.get_products(filter_dict, session)
+        products = [{
+            'id': product.id,
+            'name': product.name,
+            'image': product.main_img,
+            'price': product.price,
+            'sales_amount': product.sales_amount,
+            'discount_rate': product.discount_rate,
+            'discount_price': product.discount_price,
+            'seller_name': product.korean_name
+        } for product in self.product_dao.get_products(filter_dict, session)]
+
         return products
 
     def get_product(self, product_id, session):
