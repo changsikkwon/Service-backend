@@ -1,24 +1,8 @@
 class OrderDao:
-    def insert_orders(order_info, session):
-        """order, order_item insert 로직
-                
-        args :
-            order_info : order 정보
-        
-        returns :
-            마지막 insert row id
-        
-        Authors:
-            kcs15987@gmail.com 권창식
-        
-        History:
-            2020-09-26 (권창식) : 초기 생성
-        """
-                
-        row = session.execute(
+    def insert_orders(self, order_info, user_id, session):
+        session.execute(
         """INSERT INTO orders (
                 user_id,
-                shipping_address_id,
                 total_shipping_fee,
                 total_discount,
                 total_payment,
@@ -26,13 +10,15 @@ class OrderDao:
                 orderer_name,
                 orderer_phone,
                 orderer_email,
+                receiver_name,
+                receiver_phone,
+                receiver_address,
                 payment_date,
                 created_at,
                 is_deleted
              )
             VALUES(
                 :user_id,
-                :shipping_address_id,
                 :total_shipping_fee,
                 :total_discount,
                 :total_payment,
@@ -40,42 +26,31 @@ class OrderDao:
                 :orderer_name,
                 :orderer_phone,
                 :orderer_email,
-                payment_date,
+                :receiver_name,
+                :receiver_phone,
+                :receiver_address,
+                now(),
                 now(),
                 0
         )"""
         ,({
-        'user_id'                 : order_info['user_id'],
-        'shipping_address_id'     : order_info['shipping_address_id'],
-        'total_shipping_fee'      : order_info['total_shipping_fee'],
-        'total_discount'          : order_info['total_discount'],
-        'total_payment'           : order_info['total_payment'],
-        'shipping_memo'           : order_info['shipping_memo'],
-        'orderer_name'            : order_info['orderer_name'],
-        'orderer_phone'           : order_info['orderer_phone'],
-        'orderer_email'           : order_info['orderer_email'],
+        'user_id'             : user_id['user_id'],
+        'shipping_address_id' : order_info['shipping_address_id'],
+        'total_shipping_fee'  : order_info['total_shipping_fee'],
+        'total_discount'      : order_info['total_discount'],
+        'total_payment'       : order_info['total_payment'],
+        'shipping_memo'       : order_info['shipping_memo'],
+        'orderer_name'        : order_info['orderer_name'],
+        'orderer_phone'       : order_info['orderer_phone'],
+        'orderer_email'       : order_info['orderer_email'],
+        'receiver_name'       : order_info['receiver_name'],
+        'receiver_phone'      : order_info['receiver_phone'],
+        'receiver_address'    : order_info['receiver_address'],
         })).lastrowid
-    
-        return row
-    
-    def insert_order_item_info(order_item_info, session):
-        """order, order_item insert 로직
-                
-        args :
-            order_item_info : order_item 정보
         
-        returns :
-            마지막 insert row id
-        
-        Authors:
-            kcs15987@gmail.com 권창식
-        
-        History:
-            2020-09-26 (권창식) : 초기 생성
-        """
-                
-        row = session.execute(
+        session.execute(
         """INSERT INTO order_item_info (
+                order_detail_id,
                 order_id,
                 order_status_id,
                 product_id,
@@ -90,7 +65,8 @@ class OrderDao:
                 is_deleted
              )
             VALUES(
-                :order_id,
+                (select concat(curdate()+0, LPAD(last_insert_id(),4,'0'))),
+                (last_insert_id()),
                 1,
                 :product_id,
                 :price,
@@ -100,43 +76,26 @@ class OrderDao:
                 :units,
                 :discount_price,
                 now(),
-                9999-12-31 23:59:59,
+                "9999-12-31 23:59:59",
                 0
         )"""
         ,({
-        'order_id'                : order_item_info['order_id'],
-        'product_id'              : order_item_info['product_id'],
-        'price'                   : order_item_info['price'],
-        'option_color'            : order_item_info['option_color'],
-        'option_size'             : order_item_info['option_size'],
-        'option_additional_price' : order_item_info['option_additional_price'],
-        'units'                   : order_item_info['units'],
-        'discount_price'          : order_item_info['discount_price'],
-        })).lastrowid
+        'product_id'              : order_info['product_id'],
+        'price'                   : order_info['price'],
+        'option_color'            : order_info['option_color'],
+        'option_size'             : order_info['option_size'],
+        'option_additional_price' : order_info['option_additional_price'],
+        'units'                   : order_info['units'],
+        'discount_price'          : order_info['discount_price'],
+        }))
     
-        return row
-
-    def get_order_item(order_item_info_id, session):
-        """구글유저 브랜디 회원가입 로직
-                
-        args :
-            info_user : 구글에서 받아온 유저정보
-        
-        returns :
-            회원가입 성공시 None
-            실패시 에러발생
-        
-        Authors:
-            kcs15987@gmail.com 권창식
-        
-        History:
-            2020-09-24 (권창식) : 초기 생성
-        """
+    def select_order_item(self, order_id, user_id, session):
         row = session.execute((
         """SELECT 
                 p_info.name,
                 p_info.main_img,
                 o.total_payment,
+                o.user_id,
                 o_item.option_size,
                 o_item.option_color,
                 o_item.units,
@@ -148,7 +107,13 @@ class OrderDao:
             INNER JOIN product_info AS p_info ON p.id = p_info.product_id
             INNER JOIN sellers AS s ON p_info.seller_id = s.id
             INNER JOIN seller_info AS s_info ON s.id = s_info.seller_id
-            WHERE o_item.id = :order_item_info_id
-        """), {'order_item_info_id' : order_item_info_id}).fetchall()
+            WHERE o.user_id = :user_id
+            AND o.id = :order_id
+        """),{
+            'user_id'  : user_id['user_id'],
+            'order_id' : order_id['order_id']        
+        }).fetchall()
+        
+        print(row)
         
         return row

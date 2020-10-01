@@ -70,6 +70,24 @@ class UserDao:
         return row
     
     def insert_shipping_address(self, shipping_address_info, user_id, session):
+        """배송지정보 insert 로직
+        유저의 신규 배송지정보 insert
+        해당 유저의 배송지 id가 5개 미만일 경우 insert
+                    
+        args :
+            shipping_address_info : 유저가 입력한 배송지정보
+            user_id : 데코레이터 g객체 user_id
+        
+        returns :
+            insert 성공시 lastrowid
+            배송지 정보가 5개 이상일 경우 None 
+        
+        Authors:
+            kcs15987@gmail.com 권창식
+        
+        History:
+            2020-09-28 (권창식) : 초기 생성
+        """
         count_shipping_address = session.execute(
         """ SELECT id
             FROM shipping_address
@@ -103,6 +121,21 @@ class UserDao:
         return None
     
     def select_shipping_address(self, user_id, session):
+        """배송지정보 select 로직
+        해당 유저의 모든 배송지 정보 select
+                    
+        args :
+            user_id : 데코레이터 g객체 user_id
+        
+        returns :
+            유저의 모든 배송지 정보
+        
+        Authors:
+            kcs15987@gmail.com 권창식
+        
+        History:
+            2020-09-28 (권창식) : 초기 생성
+        """
         row = session.execute(
         """ SELECT
             id,
@@ -110,7 +143,6 @@ class UserDao:
             address,
             phone_number,
             reciever,
-            ordering,
             is_default
             FROM shipping_address
             WHERE user_id = :user_id
@@ -120,6 +152,22 @@ class UserDao:
         return row
 
     def update_shipping_address(self, shipping_address_info, user_id, session):
+        """배송지정보 update 로직
+        유저의 배송지정보 update
+                    
+        args :
+            shipping_address_info : 유저가 수정한 배송지정보
+            user_id : 데코레이터 g객체 user_id
+        
+        returns :
+            update 성공시 lastrowid
+        
+        Authors:
+            kcs15987@gmail.com 권창식
+        
+        History:
+            2020-09-28 (권창식) : 초기 생성
+        """
         row = session.execute(
         """ UPDATE shipping_address
             SET address      = :address,
@@ -141,7 +189,20 @@ class UserDao:
         return row
     
     def delete_shipping_address(self, user_id, delete_info, session):
-        row = session.execute(
+        """배송지정보 delete 로직
+        유저의 배송지정보 delete
+                    
+        args :
+            delete_info : 삭제하고자 하는 배송지정보 id
+            user_id : 데코레이터 g객체 user_id
+                
+        Authors:
+            kcs15987@gmail.com 권창식
+        
+        History:
+            2020-09-28 (권창식) : 초기 생성
+        """
+        session.execute(
         """ DELETE FROM shipping_address
             WHERE id = :id 
             AND   user_id = :user_id
@@ -149,6 +210,4 @@ class UserDao:
         ,{
             'user_id' : user_id['user_id'],
             'id'      : delete_info['id']
-        }).lastrowid
-    
-        return row
+        })
