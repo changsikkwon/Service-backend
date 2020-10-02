@@ -125,6 +125,7 @@ def create_product_endpoints(product_service, Session):
                     'best_items'        : [],
                     'brand_items'       : [],
                     'recommended_items' : [],
+                    'category_items'    : []
                 }
 
                 # Best 상품 필터 - 해당하는 메인 카테고리의 상품 중 판매량 순 10개만 가져오기 위해 선언
@@ -134,13 +135,29 @@ def create_product_endpoints(product_service, Session):
                 }
                 best_products = product_service.get_products(best_prod_filter, session)
 
-                # 파라미터로 들어온 카테고리의 id 에 따라 특정 셀러를 지정하고 상품 5개만 가져오기 위해 선언
+                # 추천 상품 필터 - 할인율 기준
+                recommended_prod_filter = {
+                    'main_category_id': args[2],
+                    'limit': 30,
+                    'discount_rate': 1
+                }
+                recommended_products = product_service.get_products(recommended_prod_filter, session)
+
+                # 파라미터로 들어온 카테고리의 id (args[2]) 에 따라 특정 셀러를 지정하고 상품 5개만 가져오기 위해 선언,
+                # 카테고리 id 에 해당하는 첫 번째 카테고리 아이디로 필터링된 상품 리스트를 가져오기 위해 선언
                 if args[2] == 5:
                     # 브랜드 셀러
                     seller_id = 30
+
+                    # 브랜드에 해당하는 첫 번째 카테고리 아이디
+                    f_cat_list = (12, 13, 14, 15, 16)  # 12(아우터), 13(상의), 14(원피스), 15(스커트), 16(신발)
+
                 else:
                     # 뷰티 셀러
                     seller_id = 359
+
+                    # 뷰티에 해당하는 첫 번째 카테고리 아이디
+                    f_cat_list = (23, 24, 25, 26, 27)  # 23(스킨/토너), 24(에센스/앰플), 25(크림), 26(클렌징), 27(기타)
 
                 # 브랜드 상품 리스트 필터
                 seller_filter = {
@@ -149,13 +166,20 @@ def create_product_endpoints(product_service, Session):
                 }
                 brand_products = product_service.get_products(seller_filter, session)
 
-                # 추천 상품 필터 - 할인율 기준
-                recommended_prod_filter = {
-                    'main_category_id' : args[2],
-                    'limit'            : 30,
-                    'discount_rate'    : 1
-                }
-                recommended_products = product_service.get_products(recommended_prod_filter, session)
+
+                for id in f_cat_list:
+
+                    # 브랜드, 뷰티 메인 페이지에서 특정 첫 번째 카테고리 상품 5개 씩 보여주기 위한 필터
+                    f_category_filter = {
+                        'first_category_id' : id,
+                        'limit'             : 5
+                    }
+
+                    category_products = {}
+                    category_products['category_id'] = id
+                    category_products['products'] = product_service.get_products(f_category_filter, session)
+
+                    body['category_items'].append(category_products)
 
                 body['best_items'] = best_products
                 body['brand_items'] = brand_products
