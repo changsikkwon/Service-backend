@@ -34,12 +34,12 @@ class UserDao:
                 now(),
                 0
         )"""
-        ,({
+        ,{
         'email'        : user_info['email'],
         'sign_up_name' : user_info['name'],
         'phone_number' : user_info['phone_number'],
         'login_id'     : user_info['login_id']
-        })).lastrowid
+        }).lastrowid
     
         return row
    
@@ -114,12 +114,12 @@ class UserDao:
                     0,
                     0
             )"""
-            ,({
+            ,{
                 'user_id'      : user_id['user_id'],
                 'address'      : shipping_address_info['address'],
                 'phone_number' : shipping_address_info['phone_number'],
                 'reciever'     : shipping_address_info['reciever'],
-            })).lastrowid
+            }).lastrowid
             return row
         return None
     

@@ -33,7 +33,7 @@ class OrderDao:
                 now(),
                 0
         )"""
-        ,({
+        ,{
         'user_id'             : user_id['user_id'],
         'shipping_address_id' : order_info['shipping_address_id'],
         'total_shipping_fee'  : order_info['total_shipping_fee'],
@@ -46,7 +46,7 @@ class OrderDao:
         'receiver_name'       : order_info['receiver_name'],
         'receiver_phone'      : order_info['receiver_phone'],
         'receiver_address'    : order_info['receiver_address'],
-        })).lastrowid
+        }).lastrowid
         
         session.execute(
         """INSERT INTO order_item_info (
@@ -79,7 +79,7 @@ class OrderDao:
                 "9999-12-31 23:59:59",
                 0
         )"""
-        ,({
+        ,{
         'product_id'              : order_info['product_id'],
         'price'                   : order_info['price'],
         'option_color'            : order_info['option_color'],
@@ -87,10 +87,10 @@ class OrderDao:
         'option_additional_price' : order_info['option_additional_price'],
         'units'                   : order_info['units'],
         'discount_price'          : order_info['discount_price'],
-        }))
+        })
     
     def select_order_item(self, user_id, session):
-        row = session.execute((
+        row = session.execute(
         """SELECT 
                 p_info.name,
                 p_info.main_img,
@@ -111,14 +111,14 @@ class OrderDao:
             INNER JOIN sellers AS s ON p_info.seller_id = s.id
             INNER JOIN seller_info AS s_info ON s.id = s_info.seller_id
             WHERE o.user_id = :user_id
-        """),{
+        """,{
             'user_id'  : user_id['user_id']
         }).fetchall()
     
         return row
     
     def update_cancel_reason(self, cancel_info, user_id, session):
-        row = session.execute(
+        row = session.execute((
         """ UPDATE order_item_info
             SET cancel_reason_id = :cancel_reason_id
             WHERE id = :id
@@ -130,7 +130,9 @@ class OrderDao:
             'order_id'         : cancel_info['order_id'],
             'cancel_reason_id' : cancel_info['cancel_reason_id'],
             'user_id'          : user_id['user_id']
-        }
+        }).lastrowid
+        
+        return row
         
     def update_refund_reason(self, refund_info, user_id, session):
         row = session.execute(
@@ -140,9 +142,11 @@ class OrderDao:
             AND user_id = :user_id
             AND order_id = :order_id
         """
-        ), {
+        ,{
             'id'               : refund_info['id'],
             'order_id'         : refund_info['order_id'],
             'refund_reason_id' : refund_info['refund_reason_id'],
             'user_id'          : user_id['user_id']
-        }
+        }).lastrowid
+        
+        return row

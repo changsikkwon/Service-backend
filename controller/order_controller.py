@@ -39,8 +39,6 @@ def create_order_endpoints(order_service, Session):
             get_order_item_info = order_service.select_order_item(user_id, session)
             order_item_info     = [dict(order_item_info) for order_item_info in get_order_item_info]
             
-            if not order_item_info:
-                return jsonify({'message' : 'INVALID_ORDER'}), 400
             return jsonify({'data' : order_item_info}), 200
             
         except Exception as e:
