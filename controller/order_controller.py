@@ -35,14 +35,31 @@ def create_order_endpoints(order_service, Session):
     def select_order_item_info():
         session = Session()
         try:
-            order_id            = request.json
             user_id             = g.user_id
-            get_order_item_info = order_service.select_order_item(order_id, user_id, session)
+            get_order_item_info = order_service.select_order_item(user_id, session)
             order_item_info     = [dict(order_item_info) for order_item_info in get_order_item_info]
             
             if not order_item_info:
                 return jsonify({'message' : 'INVALID_ORDER'}), 400
-            return jsonify(order_item_info), 200
+            return jsonify({'data' : order_item_info}), 200
+            
+        except Exception as e:
+            session.rollback()
+            return jsonify({'message' : f'{e}'}), 500
+        
+        finally:
+            session.close()
+            
+    @order_app.route("/cancel", methods = ['PUT'], endpoint = 'update_cancel_reason')
+    @login_required
+    def update_cancel_reason():
+        session = Session()
+        try:
+            cancel_info          = request.json
+            user_id              = g.user_id
+            order_service.update_cancel_reason(cancel_info, user_id, session)
+  
+            return jsonify({'message' : 'SUCCESS'}), 200
         
         except KeyError:
             return jsonify({'message' : 'KEY_ERROR'}), 400    
@@ -53,5 +70,26 @@ def create_order_endpoints(order_service, Session):
         
         finally:
             session.close()
-    
+            
+    @order_app.route("/refund", methods = ['PUT'], endpoint = 'update_refund_reason')
+    @login_required
+    def update_refund_reason():
+        session = Session()
+        try:
+            refund_info          = request.json
+            user_id              = g.user_id
+            order_service.update_refund_reason(refund_info, user_id, session)
+  
+            return jsonify({'message' : 'SUCCESS'}), 200
+        
+        except KeyError:
+            return jsonify({'message' : 'KEY_ERROR'}), 400    
+            
+        except Exception as e:
+            session.rollback()
+            return jsonify({'message' : f'{e}'}), 500
+        
+        finally:
+            session.close()
+
     return order_app

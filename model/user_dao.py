@@ -89,9 +89,10 @@ class UserDao:
             2020-09-28 (권창식) : 초기 생성
         """
         count_shipping_address = session.execute(
-        """ SELECT id
+        """ SELECT is_deleted
             FROM shipping_address
             WHERE user_id = :user_id
+            AND is_deleted = 0
         """
         ,{'user_id' : user_id['user_id']}).fetchall()
      
@@ -102,13 +103,15 @@ class UserDao:
                     address,
                     phone_number,
                     reciever,
-                    is_default
+                    is_default,
+                    is_deleted
                 )
                 VALUES(
                     :user_id,
                     :address,
                     :phone_number,
                     :reciever,
+                    0,
                     0
             )"""
             ,({
@@ -144,8 +147,9 @@ class UserDao:
             phone_number,
             reciever,
             is_default
-            FROM shipping_address
+            FROM  shipping_address
             WHERE user_id = :user_id
+            ANd   is_deleted = 0
         """
         , {'user_id' : user_id['user_id']}).fetchall()
         
@@ -203,11 +207,13 @@ class UserDao:
             2020-09-28 (권창식) : 초기 생성
         """
         session.execute(
-        """ DELETE FROM shipping_address
-            WHERE id = :id 
-            AND   user_id = :user_id
+        """ UPDATE shipping_address
+            SET    is_deleted = :is_deleted
+            WHERE  id = :id
+            AND    user_id = :user_id
         """
         ,{
-            'user_id' : user_id['user_id'],
-            'id'      : delete_info['id']
+            'user_id'    : user_id['user_id'],
+            'id'         : delete_info['id'],
+            'is_deleted' : delete_info['is_deleted']
         })

@@ -89,17 +89,20 @@ class OrderDao:
         'discount_price'          : order_info['discount_price'],
         }))
     
-    def select_order_item(self, order_id, user_id, session):
+    def select_order_item(self, user_id, session):
         row = session.execute((
         """SELECT 
                 p_info.name,
                 p_info.main_img,
                 o.total_payment,
+                o.id,
                 o.user_id,
+                o.created_at,
                 o_item.option_size,
                 o_item.option_color,
                 o_item.units,
                 o_item.price,
+                o_item.order_detail_id,
                 s_info.korean_name
             FROM order_item_info AS o_item
             INNER JOIN orders AS o ON o_item.order_id = o.id
@@ -108,12 +111,38 @@ class OrderDao:
             INNER JOIN sellers AS s ON p_info.seller_id = s.id
             INNER JOIN seller_info AS s_info ON s.id = s_info.seller_id
             WHERE o.user_id = :user_id
-            AND o.id = :order_id
         """),{
-            'user_id'  : user_id['user_id'],
-            'order_id' : order_id['order_id']        
+            'user_id'  : user_id['user_id']
         }).fetchall()
-        
-        print(row)
-        
+    
         return row
+    
+    def update_cancel_reason(self, cancel_info, user_id, session):
+        row = session.execute(
+        """ UPDATE order_item_info
+            SET cancel_reason_id = :cancel_reason_id
+            WHERE id = :id
+            AND user_id = :user_id
+            AND order_id = :order_id
+        """
+        ), {
+            'id'               : cancel_info['id'],
+            'order_id'         : cancel_info['order_id'],
+            'cancel_reason_id' : cancel_info['cancel_reason_id'],
+            'user_id'          : user_id['user_id']
+        }
+        
+    def update_refund_reason(self, refund_info, user_id, session):
+        row = session.execute(
+        """ UPDATE order_item_info
+            SET refund_reason_id = :refund_reason_id
+            WHERE id = :id
+            AND user_id = :user_id
+            AND order_id = :order_id
+        """
+        ), {
+            'id'               : refund_info['id'],
+            'order_id'         : refund_info['order_id'],
+            'refund_reason_id' : refund_info['refund_reason_id'],
+            'user_id'          : user_id['user_id']
+        }
