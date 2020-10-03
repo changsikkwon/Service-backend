@@ -31,7 +31,7 @@ def create_product_endpoints(product_service, Session):
             session = Session()
 
             # 메뉴 데이터
-            category = product_service.get_menu(session)
+            category = product_service.get_menu(None, session)
 
             # 각 카테고리를 저장하기 위한 리스트
             second_category, first_category, main_category = [], [], []
@@ -91,8 +91,8 @@ def create_product_endpoints(product_service, Session):
 
         args:
             *args:
-                limit: pagination을 위한 파라미터
-                offset: pagination을 위한 파라미터
+                limit: pagination 을 위한 파라미터
+                offset: pagination 을 위한 파라미터
                 main_category_id: 메인 카테고리의 pk
                 first_category_id: 첫 번째 카테고리의 pk
                 second_category_id: 두 번째 카테고리의 pk
@@ -113,6 +113,7 @@ def create_product_endpoints(product_service, Session):
             2020-09-23 (고지원): 파라미터 유효성 검사
             2020-09-24 (고지원): 검색을 위한 파라미터 추가, 검색 시 셀러 리스트 추가
             2020-09-28 (고지원): 브랜드, 뷰티 메인에서 필요한 데이터를 위한 필터링 추가
+            2020-10-02 (고지원): 브랜드, 뷰티 메인의 첫 번째 카테고리 상품 리스트 전달
         """
         try:
             session = Session()
@@ -150,14 +151,14 @@ def create_product_endpoints(product_service, Session):
                     seller_id = 30
 
                     # 브랜드에 해당하는 첫 번째 카테고리 아이디
-                    f_cat_list = (12, 13, 14, 15, 16)  # 12(아우터), 13(상의), 14(원피스), 15(스커트), 16(신발)
+                    f_cat_list = (12, 13, 14, 15, 16, 17, 18)  # 12(아우터), 13(상의), 14(바지), 15(원피스), 16(스커트), 17(신발), 18(가방)
 
                 else:
                     # 뷰티 셀러
                     seller_id = 359
 
                     # 뷰티에 해당하는 첫 번째 카테고리 아이디
-                    f_cat_list = (23, 24, 25, 26, 27)  # 23(스킨/토너), 24(에센스/앰플), 25(크림), 26(클렌징), 27(기타)
+                    f_cat_list = (23, 24, 25, 26, 27, 28)  # 23(스킨케어), 24(메이크업), 25(바디케어), 26(헤어케어), 27(향수), 28(미용소품)
 
                 # 브랜드 상품 리스트 필터
                 seller_filter = {
@@ -166,17 +167,20 @@ def create_product_endpoints(product_service, Session):
                 }
                 brand_products = product_service.get_products(seller_filter, session)
 
-
+                # 첫 번째 카테고리 id 를 하나씩 파라미터로 넘겨 상품 데이터 5개씩 가져온다.
                 for id in f_cat_list:
 
-                    # 브랜드, 뷰티 메인 페이지에서 특정 첫 번째 카테고리 상품 5개 씩 보여주기 위한 필터
+                    # 브랜드, 뷰티 메인 페이지에서 첫 번째 카테고리 상품 5개 씩 보여주기 위한 필터
                     f_category_filter = {
-                        'first_category_id' : id,
-                        'limit'             : 5
+                        'first_category_id'   : id,
+                        'limit'               : 5
                     }
 
-                    category_products = {}
+                    # 카테고리 id 와 함께 상품 리스트를 반환한다.
+                    f_cat = product_service.get_menu(id, session)
+                    category_products = dict()
                     category_products['category_id'] = id
+                    category_products['category_name'] = f_cat[0].first_category_name
                     category_products['products'] = product_service.get_products(f_category_filter, session)
 
                     body['category_items'].append(category_products)
@@ -188,7 +192,7 @@ def create_product_endpoints(product_service, Session):
                 return body
 
             # 필터링을 위한 딕셔너리
-            filter_dict = {}
+            filter_dict = dict()
 
             # pagination
             filter_dict['limit'] = args[0]

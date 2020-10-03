@@ -1,5 +1,5 @@
 class ProductDao:
-    def get_menu(self, session):
+    def get_menu(self, first_category_id, session):
         """ 카테고리 데이터 전달
         
         args:
@@ -14,8 +14,9 @@ class ProductDao:
         History:
             2020-09-21 (고지원): 초기 생성
             2020-09-24 (고지원): 하나씩 존재했던 3개의 카테고리 정보를 가져오는 메소드를 JOIN 을 통해 한 번에 전달하도록 수정
+            2020-10-03 (고지원): 첫 번째 카테고리 id 로 필터링 추가
         """
-        row = session.execute(("""
+        filter_query = """
             SELECT
                 m_cat.id AS m_id, 
                 m_cat.main_category_name,
@@ -28,7 +29,13 @@ class ProductDao:
             FROM main_categories AS m_cat 
             LEFT OUTER JOIN first_categories AS f_cat ON m_cat.id = f_cat.main_category_id
             LEFT OUTER JOIN second_categories AS s_cat ON f_cat.id = s_cat.first_category_id
-        """))
+        """
+
+        # 첫 번째 메뉴의 id
+        if first_category_id:
+            filter_query += " WHERE f_cat.id = :first_id"
+
+        row = session.execute(filter_query, {'first_id' : first_category_id}).fetchall()
 
         return row
 

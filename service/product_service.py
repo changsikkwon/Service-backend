@@ -2,7 +2,7 @@ class ProductService:
     def __init__(self, product_dao):
         self.product_dao = product_dao
 
-    def get_menu(self, session):
+    def get_menu(self, first_category_id, session):
         """ 카테고리 데이터 전달
 
         Authors:
@@ -11,7 +11,7 @@ class ProductService:
         History:
             2020-09-21 (고지원): 초기 생성
         """
-        categories = self.product_dao.get_menu(session)
+        categories = self.product_dao.get_menu(first_category_id, session)
         return categories
 
     def get_sellers(self, q, session):
