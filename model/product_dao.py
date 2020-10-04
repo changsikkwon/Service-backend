@@ -141,8 +141,10 @@ class ProductDao:
                 p_info.name, 
                 p_info.price, 
                 p_info.sales_amount, 
+                p_info.is_promotion,
                 p_info.discount_rate, 
                 p_info.discount_price, 
+                p_info.is_promotion,
                 p_info.seller_id,
                 s_info.korean_name,
                 s_info.site_url,
@@ -177,7 +179,7 @@ class ProductDao:
             filter_query += " AND second_category_id = :second_category_id"
 
         # 세일
-        if filter_dict.get('is_promotion', None):
+        if filter_dict.get('is_promotion', None) in (0, 1):
             filter_query += " AND p_info.is_promotion = :is_promotion"
 
         # 브랜드

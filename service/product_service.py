@@ -37,14 +37,15 @@ class ProductService:
             2020-10-01 (고지원): JSON 응답 형식 정의
         """
         products = [{
-            'id': product.id,
-            'name': product.name,
-            'image': product.main_img,
-            'price': product.price,
-            'sales_amount': product.sales_amount,
-            'discount_rate': product.discount_rate,
-            'discount_price': product.discount_price,
-            'seller_name': product.korean_name
+            'id'             : product.id,
+            'name'           : product.name,
+            'image'          : product.main_img,
+            'price'          : product.price,
+            'sales_amount'   : product.sales_amount,
+            'discount_rate'  : product.discount_rate,
+            'discount_price' : product.discount_price,
+            'is_promotion'   : product.is_promotion,
+            'seller_name'    : product.korean_name
         } for product in self.product_dao.get_products(filter_dict, session)]
 
         return products

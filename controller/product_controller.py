@@ -118,7 +118,7 @@ def create_product_endpoints(product_service, Session):
         try:
             session = Session()
 
-            # args[2]: 메인 카테고리의 pk, args[8]: 전체 상품을 보여줄 지 판단하는 파라미터, args[3]: first 카테고리의 pk, args[4]: second 카테고리의 pk
+            # args[2]: 메인 카테고리의 pk, args[8]: 전체 상품을 보여줄 지 판단하는 파라미터, args[3]: 1차 카테고리의 pk, args[4]: 2차 카테고리의 pk
             if args[2] == 5 or args[2] == 6 and not args[8] and not args[3] and not args[4]:
 
                 # (5: 브랜드, 6: 뷰티) 특정 메인 카테고리 아이디 파라미터만 들어올 경우 베스트 상품, 추천 상품 데이터 등을 전달
@@ -147,17 +147,11 @@ def create_product_endpoints(product_service, Session):
                 # 파라미터로 들어온 카테고리의 id (args[2]) 에 따라 특정 셀러를 지정하고 상품 5개만 가져오기 위해 선언,
                 # 카테고리 id 에 해당하는 첫 번째 카테고리 아이디로 필터링된 상품 리스트를 가져오기 위해 선언
                 if args[2] == 5:
-                    # 브랜드 셀러
-                    seller_id = 30
-
-                    # 브랜드에 해당하는 첫 번째 카테고리 아이디
+                    seller_id = 30 # 브랜드 셀러
                     f_cat_list = (12, 13, 14, 15, 16, 17, 18)  # 12(아우터), 13(상의), 14(바지), 15(원피스), 16(스커트), 17(신발), 18(가방)
 
                 else:
-                    # 뷰티 셀러
-                    seller_id = 359
-
-                    # 뷰티에 해당하는 첫 번째 카테고리 아이디
+                    seller_id = 359 # 뷰티 셀러
                     f_cat_list = (23, 24, 25, 26, 27, 28)  # 23(스킨케어), 24(메이크업), 25(바디케어), 26(헤어케어), 27(향수), 28(미용소품)
 
                 # 브랜드 상품 리스트 필터
@@ -167,7 +161,7 @@ def create_product_endpoints(product_service, Session):
                 }
                 brand_products = product_service.get_products(seller_filter, session)
 
-                # 첫 번째 카테고리 id 를 하나씩 파라미터로 넘겨 상품 데이터 5개씩 가져온다.
+                # 1차 카테고리 id 를 하나씩 파라미터로 넘겨 상품 데이터 5개씩 가져온다.
                 for id in f_cat_list:
 
                     # 브랜드, 뷰티 메인 페이지에서 첫 번째 카테고리 상품 5개 씩 보여주기 위한 필터
