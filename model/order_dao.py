@@ -98,6 +98,7 @@ class OrderDao:
                 o.id,
                 o.user_id,
                 o.created_at,
+                o_item.id,
                 o_item.option_size,
                 o_item.option_color,
                 o_item.units,
