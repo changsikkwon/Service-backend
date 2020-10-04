@@ -113,6 +113,9 @@ class QnaDao:
         if qna_info.get('is_answered', None):
             qna_query += " AND q.is_answered = :is_answered"
 
+        # 최신순으로 정렬
+        qna_query += " ORDER BY q.created_at DESC"
+
         row = session.execute(qna_query, qna_info)
 
         return row
