@@ -1,7 +1,6 @@
 class ReviewDao:
     def get_review(self, session, product_id):
         # Method: POST
-        # data는 통신받은 메세지(dict 구조)
         # 주문을 해야 리뷰 작성 가능
         # 따라서 order_item_info id를 가져온다.
         querry = """
@@ -37,8 +36,9 @@ class ReviewDao:
         Method: POST
         
         args:
-            session: 데이터베이스 session 객체
-            data   : 
+            session : 데이터베이스 session 객체
+            user_id : 토큰을 통해 얻은 user_id
+            data    : 
                 args : rating(float), login_id(int), status_name(str), content(str)
 
         returns :
@@ -49,6 +49,7 @@ class ReviewDao:
 
         History:
             2020-10-03 (문태기): 초기 생성
+            2020-10:05 (문태기): Key value 조정 및 querry_string 추가
         """
 
         querry_into_reviews = """
