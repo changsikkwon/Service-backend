@@ -7,9 +7,12 @@ def create_review_endpoints(review_services, Session):
 
     @review_bp.route('', methods = ['GET'])
     def get_review_info():
-        session    = Session()
+        session = Session()
         try:
-            product_id = request.args.get('product_id')
+            # product_id를 querry string으로 받습니다
+            product_id  = request.args.get('product_id')
+
+            # service 층으로 session과 querry_string을 넘겨줍니다.
             review_info = review_services.get_review(session, product_id)
 
             return jsonify({"result": [dict(row) for row in review_info]})
@@ -25,8 +28,8 @@ def create_review_endpoints(review_services, Session):
     def insert_review_info():
         session = Session()
         try:
-            data        = request.json
-            user_id     = g.user_id["user_id"]
+            data    = request.json
+            user_id = g.user_id["user_id"]
             review_services.insert_review(session, user_id, data)
             
             session.commit()
