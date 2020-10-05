@@ -32,7 +32,7 @@ class QnaDao:
             0
         )"""), qna_info)
 
-    def delete_question(self, question_id, session):
+    def delete_question(self, question_info, session):
         """ question 삭제
 
         question_id 에 해당하는 문의의 is_deleted 컬럼을 1로 수정합니다.
@@ -46,12 +46,17 @@ class QnaDao:
 
         History:
             2020-09-28 (고지원): 초기 생성
+            2020-10-05 (고지원): 삭제하려는 user id 와 문의를 한 user id 가 같은 경우에만 삭제하도록 수정
         """
-        session.execute(("""
+        row = session.execute(("""
         UPDATE questions AS q
+        INNER JOIN users AS u ON u.id = q.user_id
         SET q.is_deleted = 1
-        WHERE q.id = :question_id
-        """), {'question_id' : question_id})
+        WHERE q.id = :question_id 
+        AND q.user_id = :user_id
+        """), question_info)
+
+        return row.rowcount
 
     def get_qnas(self, qna_info, session):
         """ question 리스트 전달
@@ -71,6 +76,7 @@ class QnaDao:
             2020-09-27 (고지원): 수정
                 - qna_info 파라미터에 따라 필터링되도록 수정
                 - answer 정보 함께 전달되도록 수정
+            2020-10-05 (고지원): pagination 추가
         """
         qna_query = """
             SELECT
@@ -115,6 +121,14 @@ class QnaDao:
 
         # 최신순으로 정렬
         qna_query += " ORDER BY q.created_at DESC"
+
+        # limit
+        if qna_info.get('limit', None):
+            qna_query += " LIMIT :limit"
+
+        # offset
+        if qna_info.get('offset', None):
+            qna_query += " OFFSET :offset"
 
         row = session.execute(qna_query, qna_info)
 

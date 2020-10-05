@@ -15,7 +15,7 @@ class QnaService:
         """
         self.qna_dao.insert_question(qna_info, session)
 
-    def delete_question(self, question_id, session):
+    def delete_question(self, question_info, session):
         """ question 삭제
 
         해당하는 문의를 삭제합니다.
@@ -26,7 +26,9 @@ class QnaService:
         History:
             2020-09-26 (고지원): 초기 생성
         """
-        self.qna_dao.delete_question(question_id, session)
+        row_count = self.qna_dao.delete_question(question_info, session)
+
+        return row_count
 
     def get_qnas(self, qna_info, session):
         """ question 리스트 전달

@@ -21,7 +21,8 @@ def create_qna_endpoints(qna_service, Session):
 
         returns :
             200: question 데이터베이스 입력
-            400: KEY_ERROR
+            400: KEY_ERROR,
+                 DELETE_FAILED
             500: Exception
 
         Authors:
@@ -32,6 +33,7 @@ def create_qna_endpoints(qna_service, Session):
             2020-09-28 (고지원): 수정
                 - delete 메소드 추가
                 - 로그인 데코레이터 추가
+            2020-10-05 (고지원): 삭제하려는 유저와 문의한 유저가 같은 유저인지 확인하는 코드 추가
         """
         session = Session()
         try:
@@ -54,7 +56,20 @@ def create_qna_endpoints(qna_service, Session):
 
             # soft delete 를 위해 question_id 를 쿼리 파라미터로 받는다.
             question_id = request.args.get('question_id')
-            qna_service.delete_question(question_id, session)
+
+            # 삭제하려는 유저와 문의한 유저가 일치하는지 id 를 통해 확인
+            user_id = g.user_id['user_id']
+
+            question_info = {
+                'question_id' : question_id,
+                'user_id'     : user_id
+            }
+
+            row_count = qna_service.delete_question(question_info, session)
+
+            # token의 user id 와 삭제하려는 유저의 id 가 다를 경우
+            if row_count == 0:
+                return jsonify({'message': 'DELETE_FAILED'}), 400
 
             session.commit()
 
@@ -72,7 +87,9 @@ def create_qna_endpoints(qna_service, Session):
 
     @qna_app.route('', methods=['GET'])
     @validate_params(
-        Param('product_id', GET, int, required=True),
+        Param('limit', GET, int, default=100, required=False),
+        Param('offset', GET, int, required=False),
+        Param('product_id', GET, int, required=True)
     )
     def qnas(*args):
         """ QnA 리스트 전달 API
@@ -92,13 +109,18 @@ def create_qna_endpoints(qna_service, Session):
         History:
             2020-09-27 (고지원): 초기 생성
             2020-09-30 (고지원): 파라미터 유효성 검사 추가
+            2020-10-05 (고지원): pagination 추가
         """
         session = Session()
         try:
             qna_info = {}
 
+            # pagination
+            qna_info['limit'] = args[0]
+            qna_info['offset'] = args[1]
+
             # 상품 상세페이지 상품 아이디
-            qna_info['product_id'] = args[0]
+            qna_info['product_id'] = args[2]
 
             body = [{
                 'q_id'          : qna.q_id,
