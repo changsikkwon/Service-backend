@@ -95,7 +95,6 @@ class OrderDao:
                 p_info.name,
                 p_info.main_img,
                 o.total_payment,
-                o.id,
                 o.user_id,
                 o.created_at,
                 o_item.id,

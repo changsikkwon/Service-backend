@@ -98,7 +98,7 @@ def create_user_endpoints(user_service, Session):
             return jsonify({'access_token' : access_token}), 200
         
         except exc.IntegrityError:
-            return jsonify({'message' : 'DUPLICATE_DATA'}), 402
+            return jsonify({'message' : 'DUPLICATE_DATA'}), 400
         
         except KeyError:
             return jsonify({'message' : 'KEY_ERROR'}), 400

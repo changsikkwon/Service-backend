@@ -27,9 +27,8 @@ def create_product_endpoints(product_service, Session):
             2020-09-21 (고지원): 초기 생성
             2020-09-25 (고지원): 한 번의 쿼리로 3개의 카테고리 데이터를 전달하도록 수정
         """
+        session = Session()
         try:
-            session = Session()
-
             # 메뉴 데이터
             category = product_service.get_menu(None, session)
 
@@ -115,10 +114,9 @@ def create_product_endpoints(product_service, Session):
             2020-09-28 (고지원): 브랜드, 뷰티 메인에서 필요한 데이터를 위한 필터링 추가
             2020-10-02 (고지원): 브랜드, 뷰티 메인의 첫 번째 카테고리 상품 리스트 전달
         """
+        session = Session()
         try:
-            session = Session()
-
-            # args[2]: 메인 카테고리의 pk, args[8]: 전체 상품을 보여줄 지 판단하는 파라미터, args[3]: 1차 카테고리의 pk, args[4]: 2차 카테고리의 pk
+            # args[2]: 메인 카테고리의 pk, args[8]: 전체 상품을 보여줄 지 판단하는 파라미터, args[3]: first 카테고리의 pk, args[4]: second 카테고리의 pk
             if args[2] == 5 or args[2] == 6 and not args[8] and not args[3] and not args[4]:
 
                 # (5: 브랜드, 6: 뷰티) 특정 메인 카테고리 아이디 파라미터만 들어올 경우 베스트 상품, 추천 상품 데이터 등을 전달
@@ -275,9 +273,8 @@ def create_product_endpoints(product_service, Session):
             2020-09-23 (고지원): 초기 생성
             2020-09-24 (고지원): seller 데이터를 한 번의 쿼리로 가지고 오도록 수정
         """
+        session = Session()
         try:
-            session = Session()
-
             # 상품 데이터
             product = product_service.get_product(product_id, session)
 
@@ -331,9 +328,8 @@ def create_product_endpoints(product_service, Session):
         History:
             2020-09-30 (고지원): 초기 생성
         """
+        session = Session()
         try:
-            session = Session()
-
             # 필터링을 위한 딕셔너리
             seller_dict = {}
             seller_dict['limit'] = args[0]
