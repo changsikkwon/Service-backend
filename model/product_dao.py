@@ -99,7 +99,8 @@ class ProductDao:
         # 판매량순 / 최신순 필터링
         if seller_dict.get('select', None) == 0:
             filter_query += " ORDER BY s.created_at DESC"
-        filter_query += " ORDER BY sales_amount DESC"
+        else:
+            filter_query += " ORDER BY sales_amount DESC"
 
         # limit
         if seller_dict.get('limit', None):

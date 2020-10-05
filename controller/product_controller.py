@@ -38,15 +38,15 @@ def create_product_endpoints(product_service, Session):
             # JOIN 을 하며 생기는 중복을 제거하기 위해서 중복 체크 후 리스트에 저장
             for i in category:
 
-                # (메인 카테고리의 id, 이름) 이 main_category 에 없을 경우 append
+                # 1. (메인 카테고리의 id, 이름) 이 main_category 에 없을 경우 append
                 if (i.m_id, i.main_category_name) not in main_category:
                     main_category.append((i.m_id, i.main_category_name))
 
-                # (첫 번째 카테고리의 id, 이름, 이에 해당하는 메인 카테고리의 id) 가 first_category 에 없을 경우 append
+                # 2. (1차 카테고리의 id, 이름, 이에 해당하는 메인 카테고리의 id) 가 first_category 에 없을 경우 append
                 if (i.f_id, i.first_category_name, i.main_category_id) not in first_category:
                     first_category.append((i.f_id, i.first_category_name, i.main_category_id))
 
-                # (두 번째 카테고리의 id, 이름, 이에 해당하는 첫 번째 카테고리의 id) 가 second_category 에 없을 경우 append
+                # 3. (2차 카테고리의 id, 이름, 이에 해당하는 1차 카테고리의 id) 가 second_category 에 없을 경우 append
                 second_category.append((i.s_id, i.second_category_name, i.first_category_id))
 
             # 카테고리의 계층 구조를 전달하기 위한 JSON 형식
@@ -54,10 +54,10 @@ def create_product_endpoints(product_service, Session):
                 # 메인 카테고리의 id 와 이름
                 'id'      : m_menu[0],
                 m_menu[1] : [{
-                    # 첫 번째 카테고리의 id 와 이름
+                    # 1차 카테고리의 id 와 이름
                     'id'      : f_menu[0],
                     f_menu[1] : [{
-                        # 두 번째 카테고리의 id 와 이름
+                        # 2차 카테고리의 id 와 이름
                         'id'   : s_menu[0],
                         'name' : s_menu[1]
                     } for s_menu in second_category if s_menu[2] == f_menu[0]]
@@ -116,7 +116,7 @@ def create_product_endpoints(product_service, Session):
         """
         session = Session()
         try:
-            # args[2]: 메인 카테고리의 pk, args[8]: 전체 상품을 보여줄 지 판단하는 파라미터, args[3]: first 카테고리의 pk, args[4]: second 카테고리의 pk
+            # args[2]: 메인 카테고리의 pk, args[8]: 전체 상품을 보여줄 지 판단하는 파라미터, args[3]: 1차 카테고리의 pk, args[4]: 2차 카테고리의 pk
             if args[2] == 5 or args[2] == 6 and not args[8] and not args[3] and not args[4]:
 
                 # (5: 브랜드, 6: 뷰티) 특정 메인 카테고리 아이디 파라미터만 들어올 경우 베스트 상품, 추천 상품 데이터 등을 전달
@@ -142,17 +142,17 @@ def create_product_endpoints(product_service, Session):
                 }
                 recommended_products = product_service.get_products(recommended_prod_filter, session)
 
-                # 파라미터로 들어온 카테고리의 id (args[2]) 에 따라 특정 셀러를 지정하고 상품 5개만 가져오기 위해 선언,
-                # 카테고리 id 에 해당하는 첫 번째 카테고리 아이디로 필터링된 상품 리스트를 가져오기 위해 선언
+                # 1. 파라미터로 들어온 카테고리의 id (args[2]) 에 따라 특정 셀러를 지정하고 상품 5개만 가져오기 위해 선언,
+                # 2. 특정 1차 카테고리 아이디로 필터링된 상품 리스트를 가져오기 위해 선언
                 if args[2] == 5:
-                    seller_id = 30 # 브랜드 셀러
-                    f_cat_list = (12, 13, 14, 15, 16, 17, 18)  # 12(아우터), 13(상의), 14(바지), 15(원피스), 16(스커트), 17(신발), 18(가방)
+                    seller_id = 30
+                    f_cat_list = (12, 13, 14, 15, 16, 17, 18)
 
                 else:
-                    seller_id = 359 # 뷰티 셀러
-                    f_cat_list = (23, 24, 25, 26, 27, 28)  # 23(스킨케어), 24(메이크업), 25(바디케어), 26(헤어케어), 27(향수), 28(미용소품)
+                    seller_id = 359
+                    f_cat_list = (23, 24, 25, 26, 27, 28)
 
-                # 브랜드 상품 리스트 필터
+                # 특정 셀러 상품 리스트 필터
                 seller_filter = {
                     'main_category_id' : args[2],
                     'seller_id'        : seller_id
@@ -162,18 +162,21 @@ def create_product_endpoints(product_service, Session):
                 # 1차 카테고리 id 를 하나씩 파라미터로 넘겨 상품 데이터 5개씩 가져온다.
                 for id in f_cat_list:
 
-                    # 브랜드, 뷰티 메인 페이지에서 첫 번째 카테고리 상품 5개 씩 보여주기 위한 필터
+                    # 1. 첫 번째 카테고리 상품 5개 씩 보여주기 위한 필터 정의
                     f_category_filter = {
-                        'first_category_id'   : id,
-                        'limit'               : 5
+                        'first_category_id' : id,
+                        'limit'             : 5
                     }
 
-                    # 카테고리 id 와 함께 상품 리스트를 반환한다.
+                    # 2. 필터와 함께 products 반환 메소드 호출
+                    category_products['products'] = product_service.get_products(f_category_filter, session)
+
+                    # 3. 카테고리 id, name 과 함께 상품 리스트를 반환한다.
                     f_cat = product_service.get_menu(id, session)
+
                     category_products = dict()
                     category_products['category_id'] = id
                     category_products['category_name'] = f_cat[0].first_category_name
-                    category_products['products'] = product_service.get_products(f_category_filter, session)
 
                     body['category_items'].append(category_products)
 
@@ -208,8 +211,8 @@ def create_product_endpoints(product_service, Session):
             filter_dict['all_items'] = args[8]
 
             body = {
-                'products': [],
-                'sellers': [],
+                'products' : [],
+                'sellers'  : []
             }
 
             # 상품 데이터
@@ -219,7 +222,7 @@ def create_product_endpoints(product_service, Session):
             if filter_dict['q']:
 
                 # 필터링된 셀러 리스트를 가져오기 위한 딕셔너리
-                seller_info = {}
+                seller_info = dict()
 
                 seller_info['name'] = filter_dict['q']
                 seller_info['limit'] = 100
@@ -300,12 +303,12 @@ def create_product_endpoints(product_service, Session):
         finally:
             session.close()
 
-    @product_app.route('/sellers', methods=['GET'])
+    @product_app.route('/seller', methods=['GET'])
     @validate_params(
         Param('limit', GET, int, default = 100, required = False),
         Param('offset', GET, int, required = False),
         Param('main_category_id', GET, int, rules = [Enum(4, 5, 6)], required = False),
-        Param('select', GET, int, rules = [Enum(0, 1)], default = 1),
+        Param('select', GET, int, rules = [Enum(0, 1)], default = 1, required = False),
     )
     def sellers(*args):
         """ 셀러 리스트 전달 API
@@ -331,7 +334,7 @@ def create_product_endpoints(product_service, Session):
         session = Session()
         try:
             # 필터링을 위한 딕셔너리
-            seller_dict = {}
+            seller_dict = dict()
             seller_dict['limit'] = args[0]
             seller_dict['offset'] = args[1]
             seller_dict['main_category_id'] = args[2]
