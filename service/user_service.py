@@ -81,9 +81,15 @@ class UserService:
         
         History:
             2020-09-28 (권창식) : 초기 생성
+            2020-10-06 (권창식) : shipping_address count 로직 추가
         """
-        new_shipping_address_info = self.user_dao.insert_shipping_address(shipping_address_info, user_id, session)
-        return new_shipping_address_info
+        count_shipping_address = self.user_dao.count_shipping_address(user_id, session)
+        if count_shipping_address < 5:
+            is_default = 0
+            if count_shipping_address == 0:
+                is_default = 1
+            new_shipping_address_info = self.user_dao.insert_shipping_address(shipping_address_info, user_id, is_default, session)
+            return new_shipping_address_info
     
     def select_shipping_address(self, user_id, session):
         """배송지 select 로직

@@ -1,5 +1,18 @@
 class OrderDao:
     def insert_orders(self, order_info, user_id, session):
+        """신규 order insert 로직
+                    
+        args:
+            session    : connection 형성된 session 객체
+            user_id    : 데코레이터 g객체 user_id
+            order_info : order, order_item 정보
+        
+        Authors:
+            kcs15987@gmail.com 권창식
+        
+        History:
+            2020-10-05 (권창식) : 초기 생성
+        """
         session.execute(
         """INSERT INTO orders (
                 user_id,
@@ -65,7 +78,7 @@ class OrderDao:
                 is_deleted
              )
             VALUES(
-                (select concat(curdate()+0, LPAD(last_insert_id(),4,'0'))),
+                (select concat(curdate()+0, LPAD(last_insert_id(),5,'0'))),
                 (last_insert_id()),
                 1,
                 :product_id,
@@ -90,6 +103,21 @@ class OrderDao:
         })
     
     def select_order_item(self, user_id, session):
+        """신규 order insert 로직
+                    
+        args:
+            session : connection 형성된 session 객체
+            user_id : 데코레이터 g객체 user_id
+        
+        return:
+            유저가 주문한 모든 order_item
+        
+        Authors:
+            kcs15987@gmail.com 권창식
+        
+        History:
+            2020-10-05 (권창식) : 초기 생성
+        """
         row = session.execute(
         """SELECT 
                 p_info.name,
@@ -103,6 +131,7 @@ class OrderDao:
                 o_item.units,
                 o_item.price,
                 o_item.order_detail_id,
+                o_item.order_status_id,
                 s_info.korean_name
             FROM order_item_info AS o_item
             INNER JOIN orders AS o ON o_item.order_id = o.id
@@ -111,42 +140,195 @@ class OrderDao:
             INNER JOIN sellers AS s ON p_info.seller_id = s.id
             INNER JOIN seller_info AS s_info ON s.id = s_info.seller_id
             WHERE o.user_id = :user_id
+            AND o_item.is_deleted = 0
         """,{
             'user_id'  : user_id['user_id']
         }).fetchall()
     
         return row
     
-    def update_cancel_reason(self, cancel_info, user_id, session):
-        row = session.execute((
-        """ UPDATE order_item_info
-            SET cancel_reason_id = :cancel_reason_id
-            WHERE id = :id
-            AND user_id = :user_id
-            AND order_id = :order_id
+    def end_record(self, order_detail_id, now, session):
+        """order_item 선분 종료 로직
+                    
+        args:
+            session         : connection 형성된 session 객체
+            user_id         : 데코레이터 g객체 user_id
+            order_detail_id : 선분종료 할 order_detail_id
+            
+        Authors:
+            kcs15987@gmail.com 권창식
+        
+        History:
+            2020-10-05 (권창식) : 초기 생성
         """
-        ), {
-            'id'               : cancel_info['id'],
-            'order_id'         : cancel_info['order_id'],
-            'cancel_reason_id' : cancel_info['cancel_reason_id'],
-            'user_id'          : user_id['user_id']
-        }).lastrowid
-        
-        return row
-        
-    def update_refund_reason(self, refund_info, user_id, session):
-        row = session.execute(
+        session.execute(
         """ UPDATE order_item_info
-            SET refund_reason_id = :refund_reason_id
-            WHERE id = :id
-            AND user_id = :user_id
-            AND order_id = :order_id
+            SET end_date = :now,
+                is_deleted = 1
+            WHERE order_detail_id = :order_detail_id
+            AND is_deleted = 0
         """
         ,{
-            'id'               : refund_info['id'],
-            'order_id'         : refund_info['order_id'],
-            'refund_reason_id' : refund_info['refund_reason_id'],
-            'user_id'          : user_id['user_id']
-        }).lastrowid
+            'order_detail_id' : order_detail_id['order_detail_id'],
+            'now'             : now
+        })
+    
+    def insert_cancel_reason(self, cancel_reason, now, session):
+        """order_item cancel 로직
+                    
+        args:
+            session       : connection 형성된 session 객체
+            now           : 현재시각
+            cancel_reason : 취소하려는 order_item의 order_detail_id
+            
+        Authors:
+            kcs15987@gmail.com 권창식
         
-        return row
+        History:
+            2020-10-05 (권창식) : 초기 생성
+        """
+        session.execute(
+         """INSERT INTO order_item_info (
+                order_detail_id,
+                order_id,
+                order_status_id,
+                product_id,
+                price,
+                option_color,
+                option_size,
+                option_additional_price,
+                units,
+                discount_price,
+                start_date,
+                end_date,
+                cancel_reason_id
+            )
+            SELECT
+                order_detail_id,
+                order_id,
+                6,
+                product_id,
+                price,
+                option_color,
+                option_size,
+                option_additional_price,
+                units,
+                discount_price,
+                :now,
+                '9999-12-31 23:59:59',
+                1
+            FROM order_item_info
+            WHERE is_deleted = 1
+            AND order_detail_id = :order_detail_id
+        """
+        ,{
+            'order_detail_id'  : cancel_reason['order_detail_id'],
+            'now'              : now
+        })
+        
+    def insert_refund_reason(self, refund_reason, now, session):
+        """order_item refund 로직
+                    
+        args:
+            session       : connection 형성된 session 객체
+            now           : 현재시각
+            refund_reason : 환불하려는 order_item의 order_detail_id, refund_reason_id
+            
+        Authors:
+            kcs15987@gmail.com 권창식
+        
+        History:
+            2020-10-05 (권창식) : 초기 생성
+        """
+        session.execute(
+         """INSERT INTO order_item_info (
+                order_detail_id,
+                order_id,
+                order_status_id,
+                product_id,
+                price,
+                option_color,
+                option_size,
+                option_additional_price,
+                units,
+                discount_price,
+                start_date,
+                end_date,
+                refund_reason_id
+            )
+            SELECT
+                order_detail_id,
+                order_id,
+                7,
+                product_id,
+                price,
+                option_color,
+                option_size,
+                option_additional_price,
+                units,
+                discount_price,
+                :now,
+                '9999-12-31 23:59:59',
+                :refund_reason_id
+            FROM order_item_info
+            WHERE is_deleted = 1
+            AND order_detail_id = :order_detail_id
+        """
+        ,{
+            'refund_reason_id' : refund_reason['refund_reason_id'],
+            'order_detail_id'  : refund_reason['order_detail_id'],
+            'now'              : now
+        })
+        
+    def insert_refund_cancel(self, refund_cancel, now, session):
+        """order_item refund_cancel 로직
+                    
+        args:
+            session       : connection 형성된 session 객체
+            now           : 현재시각
+            refund_cancel : 환불취소하려는 order_item의 order_detail_id
+            
+        Authors:
+            kcs15987@gmail.com 권창식
+        
+        History:
+            2020-10-05 (권창식) : 초기 생성
+        """
+        session.execute(
+         """INSERT INTO order_item_info (
+                order_detail_id,
+                order_id,
+                order_status_id,
+                product_id,
+                price,
+                option_color,
+                option_size,
+                option_additional_price,
+                units,
+                discount_price,
+                start_date,
+                end_date,
+                refund_reason_id
+            )
+            SELECT
+                order_detail_id,
+                order_id,
+                3,
+                product_id,
+                price,
+                option_color,
+                option_size,
+                option_additional_price,
+                units,
+                discount_price,
+                :now,
+                '9999-12-31 23:59:59',
+                Null
+            FROM order_item_info
+            WHERE is_deleted = 1
+            AND order_detail_id = :order_detail_id
+        """
+        ,{
+            'order_detail_id'  : refund_cancel['order_detail_id'],
+            'now'              : now
+        })

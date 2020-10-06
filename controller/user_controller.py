@@ -99,9 +99,6 @@ def create_user_endpoints(user_service, Session):
         
         except exc.IntegrityError:
             return jsonify({'message' : 'DUPLICATE_DATA'}), 400
-        
-        except KeyError:
-            return jsonify({'message' : 'KEY_ERROR'}), 400
                     
         except Exception as e:
             session.rollback()
@@ -142,9 +139,6 @@ def create_user_endpoints(user_service, Session):
                 return jsonify({'message' : 'SUCCESS'}), 200
             return jsonify({'message' : "FULL_SHIPPING_ADDRESS"}), 400
         
-        except KeyError:
-            return jsonify({'message' : 'KEY_ERROR'}), 400
-        
         except Exception as e:
             session.rollback()
             return jsonify({'message' : f'{e}'}), 500
@@ -173,7 +167,10 @@ def create_user_endpoints(user_service, Session):
             user_id               = g.user_id
             get_shipping_address  = user_service.select_shipping_address(user_id, session)
             shipping_address      = [dict(shipping_address) for shipping_address in get_shipping_address]
-            return jsonify(shipping_address), 200
+            
+            if shipping_address:
+                return jsonify(shipping_address), 200
+            return jsonify({'message' : "EMPTY_SHIPPING_ADDRESS"}), 400
 
         except Exception as e:
             session.rollback()
@@ -208,9 +205,6 @@ def create_user_endpoints(user_service, Session):
             session.commit()
             return jsonify({'message' : "SUCCESS"}), 200
 
-        except KeyError:
-            return jsonify({'message' : 'KEY_ERROR'}), 400
-        
         except Exception as e:
             session.rollback()
             return jsonify({'message' : f'{e}'}), 500
@@ -244,9 +238,6 @@ def create_user_endpoints(user_service, Session):
             session.commit()
             return jsonify({'message' : 'SUCCESS'}), 200
 
-        except KeyError:
-            return jsonify({'message' : 'KEY_ERROR'}), 400
-        
         except Exception as e:
             session.rollback()
             return jsonify({'message' : f'{e}'}), 500

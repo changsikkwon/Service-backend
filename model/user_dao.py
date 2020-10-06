@@ -69,7 +69,32 @@ class UserDao:
         
         return row
     
-    def insert_shipping_address(self, shipping_address_info, user_id, session):
+    def count_shipping_address(self, user_id, session):
+        """배송지정보 count 로직
+        유저의 신규 배송지정보 count
+                    
+        args :
+            user_id : 데코레이터 g객체 user_id
+        
+        returns :
+            유저의 배송지 정보 count return
+        
+        Authors:
+            kcs15987@gmail.com 권창식
+        
+        History:
+            2020-10-06 (권창식) : 초기 생성
+        """
+        count_shipping_address = session.execute(
+        """ SELECT COUNT(*) AS count
+            FROM shipping_address
+            WHERE user_id = :user_id
+            AND is_deleted = 0
+        """
+        ,{'user_id' : user_id['user_id']}).fetchone()
+        return count_shipping_address[0]
+    
+    def insert_shipping_address(self, shipping_address_info, user_id, is_default, session):
         """배송지정보 insert 로직
         유저의 신규 배송지정보 insert
         해당 유저의 배송지 id가 5개 미만일 경우 insert
@@ -87,41 +112,34 @@ class UserDao:
         
         History:
             2020-09-28 (권창식) : 초기 생성
+            2020-10-06 (권창식) : is_default 추가
         """
-        count_shipping_address = session.execute(
-        """ SELECT is_deleted
-            FROM shipping_address
-            WHERE user_id = :user_id
-            AND is_deleted = 0
-        """
-        ,{'user_id' : user_id['user_id']}).fetchall()
-     
-        if len(count_shipping_address) < 5:
-            row = session.execute(
-            """INSERT INTO shipping_address (
-                    user_id, 
-                    address,
-                    phone_number,
-                    reciever,
-                    is_default,
-                    is_deleted
-                )
-                VALUES(
-                    :user_id,
-                    :address,
-                    :phone_number,
-                    :reciever,
-                    0,
-                    0
-            )"""
-            ,{
-                'user_id'      : user_id['user_id'],
-                'address'      : shipping_address_info['address'],
-                'phone_number' : shipping_address_info['phone_number'],
-                'reciever'     : shipping_address_info['reciever'],
-            }).lastrowid
-            return row
-        return None
+        row = session.execute(
+        """INSERT INTO shipping_address (
+                user_id, 
+                address,
+                phone_number,
+                reciever,
+                is_default,
+                is_deleted
+            )
+            VALUES(
+                :user_id,
+                :address,
+                :phone_number,
+                :reciever,
+                :is_default,
+                0
+        )"""
+        ,{
+            'user_id'      : user_id['user_id'],
+            'address'      : shipping_address_info['address'],
+            'phone_number' : shipping_address_info['phone_number'],
+            'reciever'     : shipping_address_info['reciever'],
+            'is_default'   : is_default
+        }).lastrowid
+        
+        return row
     
     def select_shipping_address(self, user_id, session):
         """배송지정보 select 로직
