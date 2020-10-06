@@ -122,8 +122,7 @@ def create_order_endpoints(order_service, Session):
         session = Session()
         try:
             cancel_info = request.json
-            user_id     = g.user_id
-            order_service.insert_cancel_reason(cancel_info, user_id, session)
+            order_service.insert_cancel_reason(cancel_info, session)
 
             session.commit() 
             return jsonify({'message' : 'SUCCESS'}), 200
@@ -157,8 +156,7 @@ def create_order_endpoints(order_service, Session):
         session = Session()
         try:
             refund_info = request.json
-            user_id     = g.user_id
-            order_service.insert_refund_reason(refund_info, user_id, session)
+            order_service.insert_refund_reason(refund_info, session)
             
             session.commit()  
             return jsonify({'message' : 'SUCCESS'}), 200 
@@ -192,8 +190,7 @@ def create_order_endpoints(order_service, Session):
         session = Session()
         try:
             refund_cancel_info = request.json
-            user_id            = g.user_id
-            order_service.insert_refund_cancel(refund_cancel_info, user_id, session)
+            order_service.insert_refund_cancel(refund_cancel_info, session)
             
             session.commit()  
             return jsonify({'message' : 'SUCCESS'}), 200 

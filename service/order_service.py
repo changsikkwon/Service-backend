@@ -43,7 +43,7 @@ class OrderService:
         order_item_info = self.order_dao.select_order_item(user_id, session)
         return order_item_info
     
-    def insert_cancel_reason(self, cancel_info, user_id, session):
+    def insert_cancel_reason(self, cancel_info, session):
         """ order_item 취소 로직
                        
         args:

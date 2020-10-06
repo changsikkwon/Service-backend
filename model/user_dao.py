@@ -216,13 +216,14 @@ class UserDao:
                     
         args :
             delete_info : 삭제하고자 하는 배송지정보 id
-            user_id : 데코레이터 g객체 user_id
+            user_id     : 데코레이터 g객체 user_id
                 
         Authors:
             kcs15987@gmail.com 권창식
         
         History:
             2020-09-28 (권창식) : 초기 생성
+            2020-10-01 (권창식) : soft_delete로 변경
         """
         session.execute(
         """ UPDATE shipping_address
