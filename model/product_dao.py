@@ -207,7 +207,7 @@ class ProductDao:
         if filter_dict.get('offset', None):
             filter_query += " OFFSET :offset"
 
-        row = session.execute(filter_query, filter_dict)
+        row = session.execute(filter_query, filter_dict).fetchall()
 
         return row
 

@@ -30,24 +30,24 @@ def create_product_endpoints(product_service, Session):
         session = Session()
         try:
             # 메뉴 데이터
-            category = product_service.get_menu(None, session)
+            categories = product_service.get_menu(None, session)
 
             # 각 카테고리를 저장하기 위한 리스트
             second_category, first_category, main_category = [], [], []
 
             # JOIN 을 하며 생기는 중복을 제거하기 위해서 중복 체크 후 리스트에 저장
-            for i in category:
+            for category in categories:
 
                 # 1. (메인 카테고리의 id, 이름) 이 main_category 에 없을 경우 append
-                if (i.m_id, i.main_category_name) not in main_category:
-                    main_category.append((i.m_id, i.main_category_name))
+                if (category.m_id, category.main_category_name) not in main_category:
+                    main_category.append((category.m_id, category.main_category_name))
 
                 # 2. (1차 카테고리의 id, 이름, 이에 해당하는 메인 카테고리의 id) 가 first_category 에 없을 경우 append
-                if (i.f_id, i.first_category_name, i.main_category_id) not in first_category:
-                    first_category.append((i.f_id, i.first_category_name, i.main_category_id))
+                if (category.f_id, category.first_category_name, category.main_category_id) not in first_category:
+                    first_category.append((category.f_id, category.first_category_name, category.main_category_id))
 
                 # 3. (2차 카테고리의 id, 이름, 이에 해당하는 1차 카테고리의 id) 가 second_category 에 없을 경우 append
-                second_category.append((i.s_id, i.second_category_name, i.first_category_id))
+                second_category.append((category.s_id, category.second_category_name, category.first_category_id))
 
             # 카테고리의 계층 구조를 전달하기 위한 JSON 형식
             body = [{
@@ -127,6 +127,32 @@ def create_product_endpoints(product_service, Session):
                     'category_items'    : []
                 }
 
+                # 1. 파라미터로 들어온 카테고리의 id (args[2]) 에 따라 특정 셀러를 지정하고 상품 5개만 가져오기 위해 선언,
+                # 2. 특정 1차 카테고리 아이디로 필터링된 상품 리스트를 가져오기 위해 선언
+                if args[2] == 5:
+                    f_cat_list = (12, 13, 14, 15, 16, 17, 18)
+                    seller_id = 30
+
+                else:
+                    f_cat_list = (23, 24, 25, 26, 27, 28)
+                    seller_id = 359
+
+                for f_cat_id in f_cat_list:
+                    # 1. 첫 번째 카테고리 상품 5개 씩 보여주기 위한 필터
+                    f_category_filter = {
+                        'first_category_id' : f_cat_id,
+                        'limit'             : 5
+                    }
+
+                    # 2. 카테고리의 id, name 과 함께 상품 리스트를 반환한다.
+                    category_products = {
+                        'category_id' : f_cat_id,
+                        'category_name' : product_service.get_menu(f_cat_id, session)[0].first_category_name,
+                        'product': product_service.get_products(f_category_filter, session),
+                    }
+
+                    body['category_items'].append(category_products)
+
                 # Best 상품 필터 - 해당하는 메인 카테고리의 상품 중 판매량 순 10개만 가져오기 위해 선언
                 best_prod_filter = {
                     'main_category_id' : args[2],
@@ -142,43 +168,12 @@ def create_product_endpoints(product_service, Session):
                 }
                 recommended_products = product_service.get_products(recommended_prod_filter, session)
 
-                # 1. 파라미터로 들어온 카테고리의 id (args[2]) 에 따라 특정 셀러를 지정하고 상품 5개만 가져오기 위해 선언,
-                # 2. 특정 1차 카테고리 아이디로 필터링된 상품 리스트를 가져오기 위해 선언
-                if args[2] == 5:
-                    seller_id = 30
-                    f_cat_list = (12, 13, 14, 15, 16, 17, 18)
-
-                else:
-                    seller_id = 359
-                    f_cat_list = (23, 24, 25, 26, 27, 28)
-
                 # 특정 셀러 상품 리스트 필터
                 seller_filter = {
                     'main_category_id' : args[2],
                     'seller_id'        : seller_id
                 }
                 brand_products = product_service.get_products(seller_filter, session)
-
-                # 1차 카테고리 id 를 하나씩 파라미터로 넘겨 상품 데이터 5개씩 가져온다.
-                for id in f_cat_list:
-
-                    # 1. 첫 번째 카테고리 상품 5개 씩 보여주기 위한 필터 정의
-                    f_category_filter = {
-                        'first_category_id' : id,
-                        'limit'             : 5
-                    }
-
-                    # 2. 필터와 함께 products 반환 메소드 호출
-                    category_products['products'] = product_service.get_products(f_category_filter, session)
-
-                    # 3. 카테고리 id, name 과 함께 상품 리스트를 반환한다.
-                    f_cat = product_service.get_menu(id, session)
-
-                    category_products = dict()
-                    category_products['category_id'] = id
-                    category_products['category_name'] = f_cat[0].first_category_name
-
-                    body['category_items'].append(category_products)
 
                 body['best_items'] = best_products
                 body['brand_items'] = brand_products
@@ -221,25 +216,19 @@ def create_product_endpoints(product_service, Session):
             # 검색어가 들어올 경우 전달하는 셀러 정보
             if filter_dict['q']:
 
-                # 필터링된 셀러 리스트를 가져오기 위한 딕셔너리
+                # 필터링된 셀러 리스트를 가져오기 위한 필터
                 seller_info = dict()
-
                 seller_info['name'] = filter_dict['q']
                 seller_info['limit'] = 100
 
-                # 검색된 셀러 리스트의 JSON 형식
+                # 검색된 셀러 리스트의 형식 정의
                 sellers = {
                     'count'      : [],
                     'seller_list': []
                 }
 
                 # 검색어에 해당하는 셀러의 리스트
-                seller_list = [{
-                    'id'     : seller.id,
-                    'name'   : seller.korean_name,
-                    'image'  : seller.image_url,
-                    'url'    : seller.site_url,
-                } for seller in product_service.get_sellers(seller_info, session)]
+                seller_list = [dict(seller) for seller in product_service.get_sellers(seller_info, session)]
 
                 # 셀러 검색 결과 개수
                 sellers['count'] = len(seller_list)
@@ -279,21 +268,7 @@ def create_product_endpoints(product_service, Session):
         session = Session()
         try:
             # 상품 데이터
-            product = product_service.get_product(product_id, session)
-
-            body = {
-                'id'             : product['p_id'],
-                'name'           : product['name'],
-                'price'          : product['price'],
-                'discount_rate'  : product['discount_rate'],
-                'discount_price' : product['discount_price'],
-                'image'          : product['images'],
-                'color'          : product['colors'],
-                'size'           : product['sizes'],
-                'sales_amount'   : product['sales_amount'],
-                'seller_name'    : product['korean_name'],
-                'seller_url'     : product['site_url'],
-            }
+            body = dict(product_service.get_product(product_id, session))
 
             return jsonify(body), 200
 
@@ -341,14 +316,7 @@ def create_product_endpoints(product_service, Session):
             seller_dict['select'] = args[3]
 
             # 셀러 데이터
-            sellers = product_service.get_sellers(seller_dict, session)
-
-            body = [{
-                'id'        : seller['id'],
-                'name'      : seller['korean_name'],
-                'image_url' : seller['image_url'],
-                'site_url'  : seller['site_url'],
-            } for seller in sellers]
+            body = [dict(seller) for seller in product_service.get_sellers(seller_dict, session)]
 
             return jsonify(body), 200
 
