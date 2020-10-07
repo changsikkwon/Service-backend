@@ -223,8 +223,8 @@ def create_product_endpoints(product_service, Session):
 
                 # 검색된 셀러 리스트의 형식 정의
                 sellers = {
-                    'count'      : [],
-                    'seller_list': []
+                    'count'       : [],
+                    'seller_list' : []
                 }
 
                 # 검색어에 해당하는 셀러의 리스트

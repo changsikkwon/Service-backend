@@ -237,6 +237,8 @@ class ProductDao:
                 p_info.sales_amount, 
                 p_info.discount_rate, 
                 p_info.discount_price,
+                p_info.simple_description,
+                p_info.detail_description,
                 p_info.seller_id,
                 s_info.korean_name,
                 s_info.site_url
