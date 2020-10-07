@@ -12,7 +12,7 @@ def create_qna_endpoints(qna_service, Session):
 
     qna_app = Blueprint('qna_app', __name__, url_prefix='/api/qnas')
 
-    @qna_app.route('/qna', methods=['POST', 'DELETE'])
+    @qna_app.route('/qna', methods = ['POST', 'DELETE'])
     @login_required
     def qna():
         """ question 작성 API
@@ -54,20 +54,15 @@ def create_qna_endpoints(qna_service, Session):
 
                 return jsonify({'message': 'INSERT_SUCCESS'}), 200
 
-            # soft delete 를 위해 question_id 를 쿼리 파라미터로 받는다.
-            question_id = request.args.get('question_id')
-
             # 삭제하려는 유저와 문의한 유저가 일치하는지 id 를 통해 확인
-            user_id = g.user_id['user_id']
-
             question_info = {
-                'question_id' : question_id,
-                'user_id'     : user_id
+                'question_id' : request.args.get('question_id'),
+                'user_id'     : g.user_id['user_id']
             }
 
             row_count = qna_service.delete_question(question_info, session)
 
-            # token의 user id 와 삭제하려는 유저의 id 가 다를 경우
+            # 유저 아이디가 매칭될 경우 row_count = 1, token의 유저 id 와 삭제하려는 유저의 id 가 다를 경우 0
             if row_count == 0:
                 return jsonify({'message': 'DELETE_FAILED'}), 400
 
@@ -87,9 +82,9 @@ def create_qna_endpoints(qna_service, Session):
 
     @qna_app.route('', methods=['GET'])
     @validate_params(
-        Param('limit', GET, int, default=100, required=False),
-        Param('offset', GET, int, required=False),
-        Param('product_id', GET, int, required=True)
+        Param('limit', GET, int, default = 100, required = False),
+        Param('offset', GET, int, required = False),
+        Param('product_id', GET, int, required = True)
     )
     def qnas(*args):
         """ QnA 리스트 전달 API
@@ -122,19 +117,7 @@ def create_qna_endpoints(qna_service, Session):
             # 상품 상세페이지 상품 아이디
             qna_info['product_id'] = args[2]
 
-            body = [{
-                'q_id'          : qna.q_id,
-                'q_content'     : qna.q_content,
-                'q_user'        : qna.login_id,
-                'q_type'        : qna.type_name,
-                'q_is_answered' : qna.is_answered,
-                'q_is_private'  : qna.q_is_private,
-                'q_created_at'  : qna.q_created_at,
-                'a_id'          : qna.a_id,
-                'a_content'     : qna.a_content,
-                'a_is_private'  : qna.a_is_private,
-                'a_created_at'  : qna.a_created_at
-            } for qna in qna_service.get_qnas(qna_info, session)]
+            body = [dict(qna) for qna in qna_service.get_qnas(qna_info, session)]
 
             return jsonify(body), 200
 
@@ -147,10 +130,12 @@ def create_qna_endpoints(qna_service, Session):
     @qna_app.route('/user', methods=['GET'])
     @login_required
     @validate_params(
-        Param('product_id', GET, int, required=False),
-        Param('is_answered', GET, int, rules=[Enum(0, 1)], required=False),
+        Param('limit', GET, int, default = 100, required = False),
+        Param('offset', GET, int, required = False),
+        Param('product_id', GET, int, required = False),
+        Param('is_answered', GET, int, rules = [Enum(0, 1)], required = False),
     )
-    def user_qna(*args):
+    def user_qnas(*args):
         """ 로그인한 user 의 QnA 리스트 전달 API
 
         user_id, product_id 에 따른 QnA 리스트를 표출합니다.
@@ -172,31 +157,27 @@ def create_qna_endpoints(qna_service, Session):
         History:
             2020-09-29 (고지원): 초기 생성
             2020-09-30 (고지원): 파라미터 유효성 검사 추가
+            2020-10-06 (고지원): 로그인 데코레이터에서 id 가져와 해당 유저의 문의만 보여주도록 수정
         """
 
         session = Session()
         try:
-            qna_info = {}
+            qna_info = dict()
+
+            # pagination
+            qna_info['limit'] = args[0]
+            qna_info['offset'] = args[1]
 
             # 상품 아이디 (특정 상품의 상세페이지에서 내가 쓴 문의 필터링을 위해)
-            qna_info['product_id'] = args[0]
+            qna_info['product_id'] = args[2]
+
+            # 유저의 아이디
+            qna_info['user_id'] = g.user_id['user_id']
 
             # 답변 여부
-            qna_info['is_answered'] = args[1]
+            qna_info['is_answered'] = args[3]
 
-            body = [{
-                'q_id'          : qna.q_id,
-                'q_content'     : qna.q_content,
-                'q_user'        : g.user_id['user_id'],
-                'q_type'        : qna.type_name,
-                'q_is_answered' : qna.is_answered,
-                'q_is_private'  : qna.q_is_private,
-                'q_created_at'  : qna.q_created_at,
-                'a_id'          : qna.a_id,
-                'a_content'     : qna.a_content,
-                'a_is_private'  : qna.a_is_private,
-                'a_created_at'  : qna.a_created_at
-            } for qna in qna_service.get_qnas(qna_info, session)]
+            body =[dict(qna) for qna in qna_service.get_qnas(qna_info, session)]
 
             return jsonify(body), 200
 

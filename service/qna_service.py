@@ -45,4 +45,5 @@ class QnaService:
             2020-09-26 (고지원): 초기 생성
         """
         questions = self.qna_dao.get_qnas(qna_info, session)
+
         return questions

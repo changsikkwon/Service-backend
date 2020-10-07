@@ -87,7 +87,7 @@ class QnaDao:
                 q.is_answered,
                 q_t.type_name,
                 q.created_at AS q_created_at,
-                u.login_id,
+                u.login_id AS q_user,
                 a.id AS a_id,
                 a.content AS a_content,
                 a.is_private AS a_is_private,
@@ -130,6 +130,6 @@ class QnaDao:
         if qna_info.get('offset', None):
             qna_query += " OFFSET :offset"
 
-        row = session.execute(qna_query, qna_info)
+        row = session.execute(qna_query, qna_info).fetchall()
 
         return row
