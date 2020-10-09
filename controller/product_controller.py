@@ -117,9 +117,13 @@ def create_product_endpoints(product_service, Session):
         session = Session()
         try:
             # args[2]: 메인 카테고리의 pk, args[8]: 전체 상품을 보여줄 지 판단하는 파라미터, args[3]: 1차 카테고리의 pk, args[4]: 2차 카테고리의 pk
-            if args[2] == 5 or args[2] == 6 and not args[8] and not args[3] and not args[4]:
+            if args[2] == 5 \
+                or args[2] == 6 \
+                and not args[8] \
+                and not args[3] \
+                and not args[4]:
 
-                # (5: 브랜드, 6: 뷰티) 특정 메인 카테고리 아이디 파라미터만 들어올 경우 베스트 상품, 추천 상품 데이터 등을 전달
+                # 특정 메인 카테고리 아이디 (5: 브랜드, 6: 뷰티) 파라미터만 들어올 경우 베스트 상품, 추천 상품 데이터 등을 전달
                 body = {
                     'best_items'        : [],
                     'brand_items'       : [],
@@ -146,9 +150,9 @@ def create_product_endpoints(product_service, Session):
 
                     # 2. 카테고리의 id, name 과 함께 상품 리스트를 반환한다.
                     category_products = {
-                        'category_id' : f_cat_id,
+                        'category_id'   : f_cat_id,
                         'category_name' : product_service.get_menu(f_cat_id, session)[0].first_category_name,
-                        'product': product_service.get_products(f_category_filter, session),
+                        'product'       : product_service.get_products(f_category_filter, session),
                     }
 
                     body['category_items'].append(category_products)
@@ -162,9 +166,9 @@ def create_product_endpoints(product_service, Session):
 
                 # 추천 상품 필터 - 할인율 기준
                 recommended_prod_filter = {
-                    'main_category_id': args[2],
-                    'limit': 30,
-                    'discount_rate': 1
+                    'main_category_id' : args[2],
+                    'limit'            : 30,
+                    'discount_rate'    : 1
                 }
                 recommended_products = product_service.get_products(recommended_prod_filter, session)
 
@@ -205,10 +209,7 @@ def create_product_endpoints(product_service, Session):
             # 메인 카테고리의 모든 상품 필터
             filter_dict['all_items'] = args[8]
 
-            body = {
-                'products' : [],
-                'sellers'  : []
-            }
+            body = dict()
 
             # 상품 데이터
             body['products'] = product_service.get_products(filter_dict, session)
@@ -221,11 +222,8 @@ def create_product_endpoints(product_service, Session):
                 seller_info['name'] = filter_dict['q']
                 seller_info['limit'] = 100
 
-                # 검색된 셀러 리스트의 형식 정의
-                sellers = {
-                    'count'       : [],
-                    'seller_list' : []
-                }
+                # 검색된 셀러 리스트 정의
+                sellers = dict()
 
                 # 검색어에 해당하는 셀러의 리스트
                 seller_list = [dict(seller) for seller in product_service.get_sellers(seller_info, session)]
