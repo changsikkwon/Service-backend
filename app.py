@@ -1,11 +1,12 @@
+from service import event_service
 from flask             import Flask
 from flask_cors        import CORS
 from sqlalchemy        import create_engine
 from sqlalchemy.pool   import QueuePool
 from sqlalchemy.orm    import sessionmaker
 
-from model             import ProductDao, UserDao, QnaDao, OrderDao, ReviewDao
-from service           import ProductService, UserService, QnaService, OrderService, ReviewService
+from model             import ProductDao, UserDao, QnaDao, OrderDao, ReviewDao, EventDao
+from service           import ProductService, UserService, QnaService, OrderService, ReviewService, EventService
 from controller        import create_product_endpoints, create_user_endpoints, create_qna_endpoints, create_order_endpoints, create_review_endpoints
 
 def create_app(test_config = None):
@@ -31,6 +32,7 @@ def create_app(test_config = None):
     qna_dao     = QnaDao()
     order_dao   = OrderDao()
     review_dao  = ReviewDao()
+    event_dao   = EventDao()
     
     # Business layer
     user_service    = UserService(user_dao)
@@ -38,6 +40,7 @@ def create_app(test_config = None):
     qna_service     = QnaService(qna_dao)
     order_service   = OrderService(order_dao)
     review_service  = ReviewService(review_dao)
+    event_service   = EventService(event_dao)
     
     # Presentation layer
     app.register_blueprint(create_user_endpoints(user_service, Session))
