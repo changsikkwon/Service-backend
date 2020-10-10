@@ -12,24 +12,19 @@ def create_order_endpoints(order_service, Session):
     @order_app.route("", methods = ['POST'], endpoint = 'insert_order')
     @login_required
     @validate_params(
-        Param('shipping_address_id',     JSON, int, required = True),
-        Param('total_shipping_fee',      JSON, int, required = True),
-        Param('total_discount',          JSON, int, required = True),
-        Param('total_payment',           JSON, int, required = True),
-        Param('shipping_memo',           JSON, str, required = True),
-        Param('orderer_name',            JSON, str, required = True),
-        Param('orderer_phone',           JSON, str, required = True),
-        Param('orderer_email',           JSON, str, required = True),
-        Param('receiver_name',           JSON, str, required = True),
-        Param('receiver_phone',          JSON, str, required = True),
-        Param('receiver_address',        JSON, str, required = True),
-        Param('product_id',              JSON, int, required = True),
-        Param('price',                   JSON, int, required = True),
-        Param('option_color',            JSON, str, required = True),
-        Param('option_size',             JSON, str, required = True),
-        Param('option_additional_price', JSON, int, required = True),
-        Param('units',                   JSON, int, required = True),
-        Param('discount_price',          JSON, int, required = True)
+        Param('total_payment',    JSON, int, required = True),
+        Param('shipping_memo',    JSON, str, required = True),
+        Param('orderer_name',     JSON, str, required = True),
+        Param('orderer_phone',    JSON, str, required = True),
+        Param('orderer_email',    JSON, str, required = True),
+        Param('receiver_name',    JSON, str, required = True),
+        Param('receiver_phone',   JSON, str, required = True),
+        Param('receiver_address', JSON, str, required = True),
+        Param('product_id',       JSON, int, required = True),
+        Param('price',            JSON, int, required = True),
+        Param('option_color',     JSON, str, required = True),
+        Param('option_size',      JSON, str, required = True),
+        Param('units',            JSON, int, required = True)
     )
     def insert_orders(*args, **kwargs):
         """신규 order insert endpoint 로직

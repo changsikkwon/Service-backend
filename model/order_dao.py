@@ -32,8 +32,8 @@ class OrderDao:
              )
             VALUES(
                 :user_id,
-                :total_shipping_fee,
-                :total_discount,
+                0,
+                0,
                 :total_payment,
                 :shipping_memo,
                 :orderer_name,
@@ -47,18 +47,15 @@ class OrderDao:
                 0
         )"""
         ,{
-        'user_id'             : user_id['user_id'],
-        'shipping_address_id' : order_info['shipping_address_id'],
-        'total_shipping_fee'  : order_info['total_shipping_fee'],
-        'total_discount'      : order_info['total_discount'],
-        'total_payment'       : order_info['total_payment'],
-        'shipping_memo'       : order_info['shipping_memo'],
-        'orderer_name'        : order_info['orderer_name'],
-        'orderer_phone'       : order_info['orderer_phone'],
-        'orderer_email'       : order_info['orderer_email'],
-        'receiver_name'       : order_info['receiver_name'],
-        'receiver_phone'      : order_info['receiver_phone'],
-        'receiver_address'    : order_info['receiver_address'],
+        'user_id'          : user_id['user_id'],
+        'total_payment'    : order_info['total_payment'],
+        'shipping_memo'    : order_info['shipping_memo'],
+        'orderer_name'     : order_info['orderer_name'],
+        'orderer_phone'    : order_info['orderer_phone'],
+        'orderer_email'    : order_info['orderer_email'],
+        'receiver_name'    : order_info['receiver_name'],
+        'receiver_phone'   : order_info['receiver_phone'],
+        'receiver_address' : order_info['receiver_address'],
         }).lastrowid
         
         session.execute(
@@ -85,21 +82,19 @@ class OrderDao:
                 :price,
                 :option_color,
                 :option_size,
-                :option_additional_price,
+                0,
                 :units,
-                :discount_price,
+                0,
                 now(),
                 "9999-12-31 23:59:59",
                 0
         )"""
         ,{
-        'product_id'              : order_info['product_id'],
-        'price'                   : order_info['price'],
-        'option_color'            : order_info['option_color'],
-        'option_size'             : order_info['option_size'],
-        'option_additional_price' : order_info['option_additional_price'],
-        'units'                   : order_info['units'],
-        'discount_price'          : order_info['discount_price'],
+        'product_id'   : order_info['product_id'],
+        'price'        : order_info['price'],
+        'option_color' : order_info['option_color'],
+        'option_size'  : order_info['option_size'],
+        'units'        : order_info['units'],
         })
     
     def select_order_item(self, user_id, session):
