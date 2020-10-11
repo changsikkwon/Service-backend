@@ -95,7 +95,6 @@ class UserDao:
         return count_shipping_address[0]
     
     def insert_shipping_address(self, shipping_address_info, user_id, is_default, session):
-        print(shipping_address_info)
         """배송지정보 insert 로직
         유저의 신규 배송지정보 insert
         해당 유저의 배송지 id가 5개 미만일 경우 insert

@@ -1,6 +1,6 @@
 import requests
 
-from flask_request_validator import GET, Param, validate_params
+from flask_request_validator import PATH, Param, validate_params
 from flask                   import request, Blueprint, jsonify, g
 
 from sqlalchemy              import exc
@@ -210,11 +210,10 @@ def create_user_endpoints(user_service, Session):
             session.rollback()
             return jsonify({'message' : f'{e}'}), 500
         
-    @user_app.route("/shippingAddress", methods = ['DELETE'], endpoint = 'delete_shipping_address')
-    @validate_params(Param('id', GET, int, required = True))  
+    @user_app.route("/shippingAddress/<int:shipping_address_id>", methods = ['DELETE'], endpoint = 'delete_shipping_address')
+    @validate_params(Param('shipping_address_id', PATH, int, required = True))  
     @login_required
     def delete_shipping_address(*args):
-        print(args)
         """ 유저 배송지 delete 로직
         유저의 배송지 delete controller
         
