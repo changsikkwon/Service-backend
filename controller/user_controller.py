@@ -1,9 +1,10 @@
 import requests
 
-from flask          import request, Blueprint, jsonify, g
+from flask_request_validator import GET, Param, validate_params
+from flask                   import request, Blueprint, jsonify, g
 
-from sqlalchemy     import exc
-from util           import login_required
+from sqlalchemy              import exc
+from util                    import login_required
 
 def create_user_endpoints(user_service, Session):
     # Blueprint 설정
@@ -210,10 +211,12 @@ def create_user_endpoints(user_service, Session):
             return jsonify({'message' : f'{e}'}), 500
         
     @user_app.route("/shippingAddress", methods = ['DELETE'], endpoint = 'delete_shipping_address')
+    @validate_params(Param('id', GET, int, required = True))  
     @login_required
-    def delete_shipping_address():
-        """ 유저 배송지 update 로직
-        유저의 배송지 update controller
+    def delete_shipping_address(*args):
+        print(args)
+        """ 유저 배송지 delete 로직
+        유저의 배송지 delete controller
         
         args :
             delete_info : 삭제하고자하는 배송지의 id
@@ -221,7 +224,7 @@ def create_user_endpoints(user_service, Session):
             user_id : 데코레이터 g객체 user_id
         
         returns :
-            update 성공시 SUCCESS
+            delete 성공시 SUCCESS
         
         Authors:
             kcs15987@gmail.com 권창식
@@ -232,12 +235,12 @@ def create_user_endpoints(user_service, Session):
         session = Session()
         try:
             user_id     = g.user_id
-            delete_info = request.json
+            delete_info = args[0]
             user_service.delete_shipping_address(user_id, delete_info, session)
             
             session.commit()
             return jsonify({'message' : 'SUCCESS'}), 200
-
+        
         except Exception as e:
             session.rollback()
             return jsonify({'message' : f'{e}'}), 500

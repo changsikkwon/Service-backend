@@ -2,7 +2,7 @@ class EventService:
     def __init__(self, event_dao):       
         self.event_dao = event_dao
     
-    def insert_orders(self, is_deleted, session):
+    def select_event_list(self, event_info, session):
         """ order 등록 로직
    
         args:
@@ -19,5 +19,5 @@ class EventService:
         History:
             2020-10-04 (권창식) : 초기 생성
         """   
-        event_list = self.event_dao.select_event_list(is_deleted, session)
+        event_list = self.event_dao.select_event_list(event_info, session)
         return event_list

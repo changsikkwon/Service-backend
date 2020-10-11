@@ -95,6 +95,7 @@ class UserDao:
         return count_shipping_address[0]
     
     def insert_shipping_address(self, shipping_address_info, user_id, is_default, session):
+        print(shipping_address_info)
         """배송지정보 insert 로직
         유저의 신규 배송지정보 insert
         해당 유저의 배송지 id가 5개 미만일 경우 insert
@@ -118,6 +119,7 @@ class UserDao:
         """INSERT INTO shipping_address (
                 user_id, 
                 address,
+                detail_address,
                 phone_number,
                 reciever,
                 is_default,
@@ -126,17 +128,19 @@ class UserDao:
             VALUES(
                 :user_id,
                 :address,
+                :detail_address,
                 :phone_number,
                 :reciever,
                 :is_default,
                 0
         )"""
         ,{
-            'user_id'      : user_id['user_id'],
-            'address'      : shipping_address_info['address'],
-            'phone_number' : shipping_address_info['phone_number'],
-            'reciever'     : shipping_address_info['reciever'],
-            'is_default'   : is_default
+            'user_id'        : user_id['user_id'],
+            'address'        : shipping_address_info['address'],
+            'detail_address' : shipping_address_info['detail_address'],
+            'phone_number'   : shipping_address_info['phone_number'],
+            'reciever'       : shipping_address_info['reciever'],
+            'is_default'     : is_default
         }).lastrowid
         
         return row
@@ -162,6 +166,7 @@ class UserDao:
             id,
             user_id,
             address,
+            detail_address,
             phone_number,
             reciever,
             is_default
@@ -192,20 +197,22 @@ class UserDao:
         """
         row = session.execute(
         """ UPDATE shipping_address
-            SET address      = :address,
-                phone_number = :phone_number,
-                reciever     = :reciever,
-                is_default   = :is_default
+            SET address        = :address,
+                detail_address = 
+                phone_number   = :phone_number,
+                reciever       = :reciever,
+                is_default     = :is_default
             WHERE id = :id
             AND   user_id = :user_id
         """
         ,{
-            'address'      : shipping_address_info['address'],
-            'phone_number' : shipping_address_info['phone_number'],
-            'reciever'     : shipping_address_info['reciever'],
-            'is_default'   : shipping_address_info['is_default'],
-            'id'           : shipping_address_info['id'],
-            'user_id'      : user_id['user_id']
+            'address'        : shipping_address_info['address'],
+            'detail_address' : shipping_address_info['detail_address'],
+            'phone_number'   : shipping_address_info['phone_number'],
+            'reciever'       : shipping_address_info['reciever'],
+            'is_default'     : shipping_address_info['is_default'],
+            'id'             : shipping_address_info['id'],
+            'user_id'        : user_id['user_id']
         }).lastrowid
     
         return row
@@ -227,12 +234,12 @@ class UserDao:
         """
         session.execute(
         """ UPDATE shipping_address
-            SET    is_deleted = :is_deleted
+            SET is_deleted = 1
             WHERE  id = :id
-            AND    user_id = :user_id
+            AND user_id = :user_id
+            AND is_deleted = 0
         """
         ,{
             'user_id'    : user_id['user_id'],
-            'id'         : delete_info['id'],
-            'is_deleted' : delete_info['is_deleted']
+            'id'         : delete_info
         })
