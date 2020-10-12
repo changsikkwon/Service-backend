@@ -1,3 +1,5 @@
+import jwt
+
 from flask import Blueprint, request, jsonify, g
 from flask_request_validator import (
     GET,
@@ -6,6 +8,7 @@ from flask_request_validator import (
     validate_params
 )
 
+from config import SECRET_KEY, ALGORITHM
 from util import login_required
 
 def create_qna_endpoints(qna_service, Session):
@@ -71,16 +74,16 @@ def create_qna_endpoints(qna_service, Session):
             return jsonify({'message': 'DELETE_SUCCESS'}), 200
 
         except KeyError:
-            return jsonify({'message' : 'KEY_ERROR'}), 400
+            return jsonify({'message': 'KEY_ERROR'}), 400
 
         except Exception as e:
             session.rollback()
-            return jsonify({'message' : f'{e}'}), 500
+            return jsonify({'message': f'{e}'}), 500
 
         finally:
             session.close()
 
-    @qna_app.route('', methods=['GET'])
+    @qna_app.route('', methods = ['GET'])
     @validate_params(
         Param('limit', GET, int, default = 100, required = False),
         Param('offset', GET, int, required = False),
@@ -105,10 +108,11 @@ def create_qna_endpoints(qna_service, Session):
             2020-09-27 (고지원): 초기 생성
             2020-09-30 (고지원): 파라미터 유효성 검사 추가
             2020-10-05 (고지원): pagination 추가
+            2020-10-12 (고지원): 삭제를 위해 로그인 한 유저의 아이디와 함께 반환하도록 수정
         """
         session = Session()
         try:
-            qna_info = {}
+            qna_info = dict()
 
             # pagination
             qna_info['limit'] = args[0]
@@ -117,7 +121,17 @@ def create_qna_endpoints(qna_service, Session):
             # 상품 상세페이지 상품 아이디
             qna_info['product_id'] = args[2]
 
-            body = [dict(qna) for qna in qna_service.get_qnas(qna_info, session)]
+            # 로그인한 유저의 문의인지 판단하기 위해 토큰을 통해 id를 가져온다.
+            access_token = request.headers.get('Authorization')
+            if access_token:
+                payload = jwt.decode(access_token, SECRET_KEY, ALGORITHM)
+            else:
+                payload = None
+
+            body = {
+                'login_user_id' : payload,
+                'qna' : [dict(qna) for qna in qna_service.get_qnas(qna_info, session)]
+            }
 
             return jsonify(body), 200
 
@@ -127,7 +141,7 @@ def create_qna_endpoints(qna_service, Session):
         finally:
             session.close()
 
-    @qna_app.route('/user', methods=['GET'])
+    @qna_app.route('/user', methods = ['GET'])
     @login_required
     @validate_params(
         Param('limit', GET, int, default = 100, required = False),
@@ -177,7 +191,7 @@ def create_qna_endpoints(qna_service, Session):
             # 답변 여부
             qna_info['is_answered'] = args[3]
 
-            body =[dict(qna) for qna in qna_service.get_qnas(qna_info, session)]
+            body = [dict(qna) for qna in qna_service.get_qnas(qna_info, session)]
 
             return jsonify(body), 200
 
