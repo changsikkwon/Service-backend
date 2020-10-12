@@ -88,6 +88,7 @@ class QnaDao:
                 q_t.type_name,
                 q.created_at AS q_created_at,
                 u.login_id AS q_user,
+                u.id AS u_id,
                 a.id AS a_id,
                 a.content AS a_content,
                 a.is_private AS a_is_private,
