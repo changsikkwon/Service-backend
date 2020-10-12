@@ -85,10 +85,11 @@ class UserService:
         """
         count_shipping_address = self.user_dao.count_shipping_address(user_id, session)
         if count_shipping_address < 5:
-            is_default = 0
             if count_shipping_address == 0:
-                is_default = 1
-            new_shipping_address_info = self.user_dao.insert_shipping_address(shipping_address_info, user_id, is_default, session)
+                shipping_address_info['is_default'] = 1
+            elif shipping_address_info['is_default'] == 1:
+                self.user_dao.update_is_default(user_id, session)
+            new_shipping_address_info = self.user_dao.insert_shipping_address(shipping_address_info, user_id, session)
             return new_shipping_address_info
     
     def select_shipping_address(self, user_id, session):
@@ -127,11 +128,12 @@ class UserService:
         History:
             2020-09-28 (권창식) : 초기 생성
         """
-        shipping_address_info = self.user_dao.update_shipping_address(shipping_address_info, user_id, session)
-        return shipping_address_info
+        if shipping_address_info['is_default'] == 1:
+            self.user_dao.update_is_default(user_id, session)
+        self.user_dao.update_shipping_address(shipping_address_info, user_id, session)
     
     def delete_shipping_address(self, user_id, delete_info, session):
-        """배송지 update 로직
+        """배송지 delete 로직
                         
         args :
             delete_info : 삭제하고자하는 배송지 
@@ -147,5 +149,8 @@ class UserService:
         History:
             2020-09-28 (권창식) : 초기 생성
         """
+        check_is_delete = self.user_dao.check_is_default(user_id, delete_info, session)
+        if check_is_delete:
+            self.user_dao.new_is_default(user_id, session)
         shipping_address_info = self.user_dao.delete_shipping_address(user_id, delete_info, session)
         return shipping_address_info    

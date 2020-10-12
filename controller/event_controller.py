@@ -1,4 +1,5 @@
 from flask                   import jsonify, Blueprint
+from requests.sessions import extract_cookies_to_jar
 from flask_request_validator import GET, Param, validate_params
 
 def create_event_endpoints(event_service, Session):
@@ -39,7 +40,6 @@ def create_event_endpoints(event_service, Session):
             }
             get_event_list = event_service.select_event_list(event_info, session)
             event_list     = [dict(event_list) for event_list in get_event_list]
-            print(event_list)
             if not event_list:
                 return jsonify({'message' : 'EMPTY_DATA'}), 400
             return jsonify({'data' : event_list}), 200
@@ -49,5 +49,44 @@ def create_event_endpoints(event_service, Session):
 
         finally:
             session.close()
+            
+    @event_app.route('/detail', methods = ['GET'])
+    @validate_params(
+        Param('id',     GET, int, required = False),
+    )             
+    def select_event_youtube_button_detail(*args):
+        """ 상품 정보 전달 API
+        여러 상품 정보가 필요한 페이지에서 쿼리 파라미터로 필터링에 사용될 값을 받아 필터링된 상품의 데이터들을 표출합니다.
+
+        args:
+            *args:
+                is_deleted : 진행중인지 종료인지 여부
+                limit : pagination 을 위한 파라미터
+                offset : pagination 을 위한 파라미터
+
+        returns :
+            상품리스트
+
+        Authors:
+            권창식
+
+        History:
+            2020-10-10 (권창식): 초기 생성
+        """
+        session = Session()
+        try:
+            event_info = {
+                'id'   : args[0]
+            }
+            get_event_detail = event_service.select_event_youtube_button_detail(event_info, session)
+            if not get_event_detail:
+                return jsonify({'message' : 'EMPTY_DATA'}), 400
+            return jsonify(get_event_detail), 200
+        
+        except Exception as e:
+            return jsonify({'message' : f'{e}'}), 500
+
+        finally:
+            session.close()            
     
     return event_app

@@ -1,3 +1,4 @@
+from flask import json
 import requests
 
 from flask_request_validator import PATH, Param, validate_params
@@ -199,13 +200,13 @@ def create_user_endpoints(user_service, Session):
         """
         session = Session()
         try:
-            shipping_address_info   = request.json
-            user_id                 = g.user_id
+            shipping_address_info = request.json
+            user_id               = g.user_id
             user_service.update_shipping_address(shipping_address_info, user_id, session)
             
             session.commit()
             return jsonify({'message' : "SUCCESS"}), 200
-
+        
         except Exception as e:
             session.rollback()
             return jsonify({'message' : f'{e}'}), 500
@@ -240,8 +241,11 @@ def create_user_endpoints(user_service, Session):
             session.commit()
             return jsonify({'message' : 'SUCCESS'}), 200
         
-        except Exception as e:
-            session.rollback()
-            return jsonify({'message' : f'{e}'}), 500
+        except KeyError:
+            return jsonify('pass'), 400
+        
+        # except Exception as e:
+        #     session.rollback()
+        #     return jsonify({'message' : f'{e}'}), 500
     
     return user_app

@@ -97,6 +97,37 @@ class OrderDao:
         'units'        : order_info['units'],
         })
     
+    def check_order_item(self, check_info, user_id, session):
+        """신규 order insert 로직
+                    
+        args:
+            session : connection 형성된 session 객체
+            user_id : 데코레이터 g객체 user_id
+        
+        return:
+            유저가 주문한 모든 order_item
+        
+        Authors:
+            kcs15987@gmail.com 권창식
+        
+        History:
+            2020-10-05 (권창식) : 초기 생성
+        """
+        row = session.execute(
+        """SELECT
+                o_item.id
+            FROM order_item_info AS o_item
+            INNER JOIN orders AS o ON o_item.order_id = o.id
+            WHERE o.user_id = :user_id
+            AND o_item.is_deleted = 0
+            AND o_item.order_detail_id = :order_detail_id
+        """,{
+            'user_id'         : user_id['user_id'],
+            'order_detail_id' : check_info['order_detail_id']
+        }).fetchall()
+    
+        return row
+    
     def select_order_item(self, user_id, session):
         """신규 order insert 로직
                     
@@ -114,7 +145,7 @@ class OrderDao:
             2020-10-05 (권창식) : 초기 생성
         """
         row = session.execute(
-        """SELECT 
+        """SELECT DISTINCT
                 p_info.name,
                 p_info.main_img,
                 o.total_payment,
@@ -136,6 +167,7 @@ class OrderDao:
             INNER JOIN seller_info AS s_info ON s.id = s_info.seller_id
             WHERE o.user_id = :user_id
             AND o_item.is_deleted = 0
+            AND o_item.end_date = '9999-12-31 23:59:59';
         """,{
             'user_id'  : user_id['user_id']
         }).fetchall()
