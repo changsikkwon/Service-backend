@@ -87,7 +87,7 @@ def create_event_endpoints(event_service, Session):
                 return jsonify({'event_detail' : 'EMPTY_DATA'}), 400
             if not get_event_button:
                 return jsonify({'event_button' : 0,
-                                "event_detail" : get_event_detail}), 400
+                                "event_detail" : get_event_detail}), 200
             
             return jsonify({"event_detail" : get_event_detail,
                             "event_button" : get_event_button}), 200
