@@ -80,8 +80,9 @@ class EventDao:
         """      
         row = session.execute(
         """ SELECT DISTINCT
-                e_pd.button_id
+                e_bt.id AS button_id
             FROM events AS e
+            INNER JOIN event_button AS e_bt ON e.id = e_bt.event_id
             INNER JOIN event_product_mappings AS e_pd ON e.id = e_pd.event_id
             WHERE e.is_deleted = 0
             AND e.id = :id

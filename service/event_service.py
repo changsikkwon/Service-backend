@@ -17,8 +17,8 @@ class EventService:
         History:
             2020-10-12 (권창식) : 초기 생성
         """   
-        event_list = self.event_dao.select_event_list(event_info, session)
-        return event_list
+        event_lists = self.event_dao.select_event_list(event_info, session)
+        return [dict(event_list) for event_list in event_lists]
     
     def select_event_detail(self, event_info, session):
         """ event_detail select 로직
@@ -54,7 +54,5 @@ class EventService:
         History:
             2020-10-12 (권창식) : 초기 생성
         """   
-        if not event_info['button_id']:
-            event_info['button_id'] = 0
         event_products = self.event_dao.select_event_products(event_info, session)      
         return [dict(event_product) for event_product in event_products]

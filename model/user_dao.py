@@ -162,7 +162,7 @@ class UserDao:
             WHERE user_id = :user_id
             AND is_default = 0
             AND is_deleted = 0
-            ORDER BY id DESC LIMIT 1
+            ORDER BY created_at DESC LIMIT 1
         """
         ,{'user_id' : user_id['user_id']})
     

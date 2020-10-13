@@ -1,6 +1,5 @@
+from sqlalchemy              import exc
 from flask                   import jsonify, Blueprint
-from flask import json
-from requests.sessions import extract_cookies_to_jar
 from flask_request_validator import GET, Param, validate_params
 
 def create_event_endpoints(event_service, Session):
@@ -18,6 +17,7 @@ def create_event_endpoints(event_service, Session):
 
         args:
             *args:
+                is_displayed : 진행중인 이벤트인지 구분 여부
                 limit  : pagination 을 위한 파라미터
                 offset : pagination 을 위한 파라미터
 
@@ -39,11 +39,16 @@ def create_event_endpoints(event_service, Session):
             }
             
             get_event_list = event_service.select_event_list(event_info, session)
-            event_list     = [dict(event_list) for event_list in get_event_list]
             
-            if not event_list:
+            if not get_event_list:
                 return jsonify({'message' : 'EMPTY_DATA'}), 400
-            return jsonify({'data' : event_list}), 200
+            return jsonify({'data' : get_event_list}), 200
+        
+        except exc.InvalidRequestError:
+            return jsonify({'message': 'INVALID_URL'}), 400    
+        
+        except exc.ProgrammingError:
+            return jsonify({'message': 'ERROR_IN_SQL_SYNTAX'}), 500        
 
         except Exception as e:
             return jsonify({'message' : f'{e}'}), 500
@@ -79,19 +84,25 @@ def create_event_endpoints(event_service, Session):
             get_event_detail, get_event_button  = event_service.select_event_detail(event_info, session)
             
             if not get_event_detail:
-                return jsonify({'message' : 'EMPTY_DATA'}), 400
+                return jsonify({'event_detail' : 'EMPTY_DATA'}), 400
             if not get_event_button:
-                return jsonify({'message' : 'EMPTY_DATA'}), 400
+                return jsonify({'event_button' : 0,
+                                "event_detail" : get_event_detail}), 400
             
             return jsonify({"event_detail" : get_event_detail,
                             "event_button" : get_event_button}), 200
+            
+        except exc.InvalidRequestError:
+            return jsonify({'message': 'INVALID_URL'}), 400              
+            
+        except exc.ProgrammingError:
+            return jsonify({'message': 'ERROR_IN_SQL_SYNTAX'}), 500            
      
         except Exception as e:
             return jsonify({'message' : f'{e}'}), 500
 
         finally:
             session.close()       
-            
             
     @event_app.route('/products', methods = ['GET'])
     @validate_params(
@@ -130,9 +141,16 @@ def create_event_endpoints(event_service, Session):
             }
             
             get_event_products = event_service.select_event_products(event_info, session)
+            
             if not get_event_products:
                 return jsonify({'message' : 'EMPTY_DATA'}), 400
             return jsonify({"event_product" : get_event_products}), 200
+        
+        except exc.InvalidRequestError:
+            return jsonify({'message': 'INVALID_URL'}), 400          
+        
+        except exc.ProgrammingError:
+            return jsonify({'message': 'ERROR_IN_SQL_SYNTAX'}), 500
 
         except Exception as e:
             return jsonify({'message' : f'{e}'}), 500
