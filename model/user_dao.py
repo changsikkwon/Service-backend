@@ -145,7 +145,7 @@ class UserDao:
         
     def new_is_default(self, user_id, session):
         """새로운 기본 배송지 update 로직
-           기존 기본 배송지가 삭제될 시 최근생성된 기본 배송지가 기본 배송지로 변경
+           기존 기본 배송지가 삭제될 시 가장 최근에 생성된 기본 배송지가 기본 배송지로 변경
         args :
             user_id : 데코레이터 g객체 user_id
 
@@ -170,8 +170,7 @@ class UserDao:
         """배송지정보 insert 로직
         유저의 신규 배송지정보 insert
         해당 유저의 배송지 id가 5개 미만일 경우 insert
-        
-                    
+      
         args :
             shipping_address_info : 유저가 입력한 배송지정보
             user_id : 데코레이터 g객체 user_id

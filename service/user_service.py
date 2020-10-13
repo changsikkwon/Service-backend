@@ -108,7 +108,8 @@ class UserService:
         History:
             2020-09-28 (권창식) : 초기 생성
         """
-        shipping_address_info = self.user_dao.select_shipping_address(user_id, session)
+        shipping_address_infos = self.user_dao.select_shipping_address(user_id, session)
+        shipping_address_info  = [dict(shipping_address_info) for shipping_address_info in shipping_address_infos]
         return shipping_address_info
     
     def update_shipping_address(self, shipping_address_info, user_id, session):

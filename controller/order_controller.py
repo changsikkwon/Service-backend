@@ -82,11 +82,10 @@ def create_order_endpoints(order_service, Session):
         try:
             user_id             = g.user_id
             get_order_item_info = order_service.select_order_item(user_id, session)
-            order_item_info     = [dict(order_item_info) for order_item_info in get_order_item_info]
             
-            if not order_item_info:
+            if not get_order_item_info:
                 return jsonify({'message' : 'EMPTY_DATA'}), 400
-            return jsonify({'data' : order_item_info}), 200
+            return jsonify({'data' : get_order_item_info}), 200
             
         except Exception as e:
             session.rollback()

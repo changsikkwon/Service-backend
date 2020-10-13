@@ -170,8 +170,8 @@ def create_user_endpoints(user_service, Session):
             get_shipping_address  = user_service.select_shipping_address(user_id, session)
             shipping_address      = [dict(shipping_address) for shipping_address in get_shipping_address]
             
-            if shipping_address:
-                return jsonify(shipping_address), 200
+            if get_shipping_address:
+                return jsonify(get_shipping_address), 200
             return jsonify({'message' : "EMPTY_SHIPPING_ADDRESS"}), 400
 
         except Exception as e:
@@ -241,11 +241,8 @@ def create_user_endpoints(user_service, Session):
             session.commit()
             return jsonify({'message' : 'SUCCESS'}), 200
         
-        except KeyError:
-            return jsonify('pass'), 400
-        
-        # except Exception as e:
-        #     session.rollback()
-        #     return jsonify({'message' : f'{e}'}), 500
+        except Exception as e:
+            session.rollback()
+            return jsonify({'message' : f'{e}'}), 500
     
     return user_app
