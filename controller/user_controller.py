@@ -1,4 +1,3 @@
-from flask import json
 import requests
 
 from flask_request_validator import PATH, Param, validate_params
@@ -168,7 +167,6 @@ def create_user_endpoints(user_service, Session):
         try:
             user_id               = g.user_id
             get_shipping_address  = user_service.select_shipping_address(user_id, session)
-            shipping_address      = [dict(shipping_address) for shipping_address in get_shipping_address]
             
             if get_shipping_address:
                 return jsonify(get_shipping_address), 200

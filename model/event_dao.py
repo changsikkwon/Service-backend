@@ -15,20 +15,22 @@ class EventDao:
         History:
             2020-10-12 (권창식) : 초기 생성
         """ 
-        row = session.execute(
-        """SELECT 
-                id,
-                banner_image
-            FROM events
-            WHERE is_displayed = :is_displayed
-            ORDER BY id ASC
-            LIMIT :limit
-            OFFSET :offset
-        """,{
+        query = """SELECT 
+                        id,
+                        banner_image
+                    FROM events
+                    WHERE is_displayed = :is_displayed
+                    ORDER BY id ASC
+                    LIMIT :limit
+                    OFFSET :offset
+                """
+        
+        row = session.execute(query,{
             'is_displayed' : event_info['is_displayed'],
             'limit'        : event_info['limit'],
             'offset'       : event_info['offset']
         }).fetchall()
+        
         return row
     
     def select_event_detail(self, event_info, session):
@@ -46,19 +48,18 @@ class EventDao:
         
         History:
             2020-10-12 (권창식) : 초기 생성
-        """        
-        row = session.execute(
-        """ SELECT
-                simple_description,
-                detail_description,
-                video_url,
-                detail_image
-            FROM events
-            WHERE is_deleted = 0
-            AND id = :id
-        """,{
-            'id' : event_info['id']
-        }).fetchall()
+        """       
+        query = """ SELECT
+                        simple_description,
+                        detail_description,
+                        video_url,
+                        detail_image
+                    FROM events
+                    WHERE is_deleted = 0
+                    AND id = :id
+                """
+        
+        row = session.execute(query,{'id' : event_info['id']}).fetchall()
          
         return row 
     
@@ -78,17 +79,16 @@ class EventDao:
         History:
             2020-10-12 (권창식) : 초기 생성
         """      
-        row = session.execute(
-        """ SELECT DISTINCT
-                e_bt.id AS button_id
-            FROM events AS e
-            INNER JOIN event_button AS e_bt ON e.id = e_bt.event_id
-            INNER JOIN event_product_mappings AS e_pd ON e.id = e_pd.event_id
-            WHERE e.is_deleted = 0
-            AND e.id = :id
-        """,{
-            'id' : event_info['id']
-        }).fetchall()
+        query = """ SELECT DISTINCT
+                        e_bt.id AS button_id
+                    FROM events AS e
+                    INNER JOIN event_button AS e_bt ON e.id = e_bt.event_id
+                    INNER JOIN event_product_mappings AS e_pd ON e.id = e_pd.event_id
+                    WHERE e.is_deleted = 0
+                    AND e.id = :id
+                """
+        
+        row = session.execute(query,{'id' : event_info['id']}).fetchall()
          
         return row     
     

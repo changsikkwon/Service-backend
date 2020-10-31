@@ -15,26 +15,26 @@ class UserDao:
         History:
             2020-09-24 (권창식) : 초기 생성
         """
-        row = session.execute(
-        """INSERT INTO users (
-                email, 
-                name,
-                phone_number,
-                login_id,
-                platform_id,
-                created_at,
-                is_deleted
-            )
-            VALUES(
-                :email,
-                :sign_up_name,
-                :phone_number,
-                :login_id,
-                2,
-                now(),
-                0
-        )"""
-        ,{
+        query = """INSERT INTO users (
+                        email, 
+                        name,
+                        phone_number,
+                        login_id,
+                        platform_id,
+                        created_at,
+                        is_deleted
+                    )
+                    VALUES(
+                        :email,
+                        :sign_up_name,
+                        :phone_number,
+                        :login_id,
+                        2,
+                        now(),
+                        0
+                )"""
+        row = session.execute(query,
+        {
         'email'        : user_info['email'],
         'sign_up_name' : user_info['name'],
         'phone_number' : user_info['phone_number'],
@@ -60,12 +60,11 @@ class UserDao:
         History:
             2020-09-24 (권창식) : 초기 생성
         """
-        row = session.execute(
-        """ SELECT email, id
-            FROM users
-            WHERE email = :email
-        """
-        , {'email' : user_info['email']}).fetchall()
+        query = """ SELECT email, id
+                    FROM users
+                    WHERE email = :email
+                """
+        row = session.execute(query, {'email' : user_info['email']}).fetchall()
         
         return row
     
@@ -85,13 +84,13 @@ class UserDao:
         History:
             2020-10-06 (권창식) : 초기 생성
         """
-        count_shipping_address = session.execute(
-        """ SELECT COUNT(*) AS count
-            FROM shipping_address
-            WHERE user_id = :user_id
-            AND is_deleted = 0
-        """
-        ,{'user_id' : user_id['user_id']}).fetchone()
+        query = """ SELECT COUNT(*) AS count
+                    FROM shipping_address
+                    WHERE user_id = :user_id
+                    AND is_deleted = 0
+                """
+        count_shipping_address = session.execute(query, {'user_id' : user_id['user_id']}).fetchone()
+        
         return count_shipping_address[0]
     
     def check_is_default(self, user_id, check_info, session):
@@ -109,17 +108,18 @@ class UserDao:
         History:
             2020-10-10 (권창식) : 초기 생성
         """
-        row = session.execute(
-        """ SELECT id
-            FROM shipping_address
-            WHERE user_id = :user_id
-            AND is_default = 1
-            AND id = :id
-        """
-        ,{
+        query = """ SELECT id
+                    FROM shipping_address
+                    WHERE user_id = :user_id
+                    AND is_default = 1
+                    AND id = :id
+                """
+        row = session.execute(query,
+        {
             'user_id' : user_id['user_id'],
             'id'      : check_info
         }).fetchall()
+        
         return row
     
     def update_is_default(self, user_id, session):
@@ -134,14 +134,13 @@ class UserDao:
         History:
             2020-10-10 (권창식) : 초기 생성
         """
-        session.execute(
-        """ UPDATE shipping_address
-            SET is_default = 0,
-                created_at = now()
-            WHERE user_id = :user_id
-            AND is_default = 1
-        """
-        ,{'user_id' : user_id['user_id']})
+        query = """ UPDATE shipping_address
+                    SET is_default = 0,
+                        created_at = now()
+                    WHERE user_id = :user_id
+                    AND is_default = 1
+                """
+        session.execute(query, {'user_id' : user_id['user_id']})
         
     def new_is_default(self, user_id, session):
         """새로운 기본 배송지 update 로직
@@ -155,16 +154,15 @@ class UserDao:
         History:
             2020-10-10 (권창식) : 초기 생성
         """
-        session.execute(
-        """ UPDATE shipping_address
-            SET is_default = 1,
-                created_at = now()
-            WHERE user_id = :user_id
-            AND is_default = 0
-            AND is_deleted = 0
-            ORDER BY created_at DESC LIMIT 1
-        """
-        ,{'user_id' : user_id['user_id']})
+        query = """ UPDATE shipping_address
+                    SET is_default = 1,
+                        created_at = now()
+                    WHERE user_id = :user_id
+                    AND is_default = 0
+                    AND is_deleted = 0
+                    ORDER BY created_at DESC LIMIT 1
+                """
+        session.execute(query, {'user_id' : user_id['user_id']})
     
     def insert_shipping_address(self, shipping_address_info, user_id, session):
         """배송지정보 insert 로직
@@ -186,30 +184,30 @@ class UserDao:
             2020-09-28 (권창식) : 초기 생성
             2020-10-06 (권창식) : is_default 추가
         """
-        row = session.execute(
-        """INSERT INTO shipping_address (
-                user_id, 
-                zone_code,
-                address,
-                detail_address,
-                phone_number,
-                reciever,
-                is_default,
-                is_deleted,
-                created_at
-            )
-            VALUES(
-                :user_id,
-                :zone_code,
-                :address,
-                :detail_address,
-                :phone_number,
-                :reciever,
-                :is_default,
-                0,
-                now()
-        )"""
-        ,{
+        query = """INSERT INTO shipping_address (
+                        user_id, 
+                        zone_code,
+                        address,
+                        detail_address,
+                        phone_number,
+                        reciever,
+                        is_default,
+                        is_deleted,
+                        created_at
+                    )
+                    VALUES(
+                        :user_id,
+                        :zone_code,
+                        :address,
+                        :detail_address,
+                        :phone_number,
+                        :reciever,
+                        :is_default,
+                        0,
+                        now()
+                )"""
+        row = session.execute(query,       
+        {
             'user_id'        : user_id['user_id'],
             'zone_code'      : shipping_address_info['zone_code'],
             'address'        : shipping_address_info['address'],
@@ -237,22 +235,21 @@ class UserDao:
         History:
             2020-09-28 (권창식) : 초기 생성
         """
-        row = session.execute(
-        """ SELECT
-            id,
-            user_id,
-            zone_code,
-            address,
-            detail_address,
-            phone_number,
-            reciever,
-            is_default
-            FROM  shipping_address
-            WHERE user_id = :user_id
-            AND is_deleted = 0
-            ORDER BY is_default DESC
-        """
-        , {'user_id' : user_id['user_id']}).fetchall()
+        query = """ SELECT
+                    id,
+                    user_id,
+                    zone_code,
+                    address,
+                    detail_address,
+                    phone_number,
+                    reciever,
+                    is_default
+                    FROM  shipping_address
+                    WHERE user_id = :user_id
+                    AND is_deleted = 0
+                    ORDER BY is_default DESC
+                """
+        row = session.execute(query, {'user_id' : user_id['user_id']}).fetchall()
         
         return row
 
@@ -273,19 +270,20 @@ class UserDao:
         History:
             2020-09-28 (권창식) : 초기 생성
         """
-        session.execute(
-        """ UPDATE shipping_address
-            SET zone_code      = :zone_code,
-                address        = :address,
-                detail_address = :detail_address,
-                phone_number   = :phone_number,
-                reciever       = :reciever,
-                is_default     = :is_default,
-                created_at     = now()
-            WHERE id = :id
-            AND   user_id = :user_id
-        """
-        ,{
+        query = """ UPDATE shipping_address
+                    SET zone_code      = :zone_code,
+                        address        = :address,
+                        detail_address = :detail_address,
+                        phone_number   = :phone_number,
+                        reciever       = :reciever,
+                        is_default     = :is_default,
+                        created_at     = now()
+                    WHERE id = :id
+                    AND   user_id = :user_id
+                """
+        
+        session.execute(query,
+        {
             'user_id'        : user_id['user_id'],
             'zone_code'      : shipping_address_info['zone_code'],
             'address'        : shipping_address_info['address'],
@@ -311,15 +309,16 @@ class UserDao:
             2020-09-28 (권창식) : 초기 생성
             2020-10-01 (권창식) : soft_delete로 변경
         """
-        session.execute(
-        """ UPDATE shipping_address
-            SET is_deleted = 1,
-                created_at = now()
-            WHERE  id = :id
-            AND user_id = :user_id
-            AND is_deleted = 0
-        """
-        ,{
+        query = """ UPDATE shipping_address
+                    SET is_deleted = 1,
+                        created_at = now()
+                    WHERE  id = :id
+                    AND user_id = :user_id
+                    AND is_deleted = 0
+                """
+        
+        session.execute(query,
+        {
             'user_id'    : user_id['user_id'],
             'id'         : delete_info
         })
