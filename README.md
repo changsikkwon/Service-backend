@@ -39,6 +39,7 @@
   - CkEdtior
   
 ### Backend
+  - Python
   - Flask
   - Mysql
   - Sqlalchemy
